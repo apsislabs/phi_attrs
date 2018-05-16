@@ -12,6 +12,9 @@ require 'phi_attrs/phi_record'
 module PhiAttrs
   def phi_model(with: nil, except: nil)
     include PhiRecord
+
+    file_logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(PhiAttrs.log_path))
+    PhiAttrs::Logger.logger = file_logger
   end
 
   @@log_path = nil
@@ -29,5 +32,4 @@ module PhiAttrs
   end
 end
 
-file_logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(PhiAttrs.log_path))
-PhiAttrs::Logger.logger = file_logger
+

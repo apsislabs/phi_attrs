@@ -21,6 +21,13 @@ RSpec.describe PhiAttrs do
     end
   end
 
+  context 'logging' do
+    it 'should log an error for unauthorized access' do
+      expect(PhiAttrs::Logger.logger).to receive(:error)
+      expect { patient_john.birthday }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    end
+  end
+
   context 'instance authorized' do
     it 'allows access to an authorized instance' do
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)

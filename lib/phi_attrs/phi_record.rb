@@ -98,9 +98,9 @@ module PhiAttrs
       unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
       self.class.send(:define_method, wrapped_method) do |*args, &block|
-        raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI acces for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
-
         PhiAttrs::Logger.tagged(@__phi_log_key) do
+          raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI acces for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
+
           unless @__phi_access_logged
             PhiAttrs::Logger.info("#{@__phi_user_id} accessing #{self.class.name} #{@__phi_user_id}.\n\t access logging triggered by method: #{method_name}")
             @__phi_access_logged = true

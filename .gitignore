@@ -1,0 +1,16 @@
+/.bundle/
+/.yardoc
+/Gemfile.lock
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+
+*Gemfile.lock
+.byebug_history
+
+/test/sample/tmp/
+*.sqlite3
+*.log

@@ -1,5 +1,6 @@
 module PhiAttrs
-  PHI_ACCESS_LOG_TAG = "PHI Access Log"
+  PHI_ACCESS_LOG_TAG = 'PHI Access Log'.freeze
+
   module PhiRecord
     extend ActiveSupport::Concern
 
@@ -22,7 +23,7 @@ module PhiAttrs
       def allow_phi!(user_id, reason)
         RequestStore.store[:phi_access] ||= {}
 
-        RequestStore.store[:phi_access][self.class.name] = {
+        RequestStore.store[:phi_access][name] ||= {
           phi_access_allowed: true,
           user_id: user_id,
           reason: reason
@@ -32,10 +33,7 @@ module PhiAttrs
       end
 
       def disallow_phi!
-        @__phi_access_allowed = false
-        @__phi_user_id = nil
-        @__phi_access_reason = nil
-
+        RequestStore.store[:phi_access].delete(name) if RequestStore.store[:phi_access].present?
         PhiAttrs::Logger.info('PHI access disabled')
       end
 
@@ -44,7 +42,7 @@ module PhiAttrs
       end
 
       def __phi_methods_wrapped=(value)
-        @__phi_methods_wrapped=value
+        @__phi_methods_wrapped = value
       end
 
       def __phi_exclude_methods
@@ -109,29 +107,27 @@ module PhiAttrs
 
     private
 
-      def phi_wrap_method(method_name)
-        return if self.class.__phi_methods_wrapped.include? method_name
+    def phi_wrap_method(method_name)
+      return if self.class.__phi_methods_wrapped.include? method_name
 
-        wrapped_method = :"__#{method_name}_phi_wrapped"
-        unwrapped_method = :"__#{method_name}_phi_unwrapped"
+      wrapped_method = :"__#{method_name}_phi_wrapped"
+      unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
-        self.class.send(:define_method, wrapped_method) do |*args, &block|
-          # byebug
+      self.class.send(:define_method, wrapped_method) do |*args, &block|
+        raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI acces for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
 
-          raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI acces for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
-
-          unless @__phi_access_logged
-            PhiAttrs::Logger.info("#{@__phi_user_id} accessing #{self.class.name} #{@__phi_user_id}.\n\t access logging triggered by method: #{method_name}")
-            @__phi_access_logged = true
-          end
-
-          send(unwrapped_method, *args, &block)
+        unless @__phi_access_logged
+          PhiAttrs::Logger.info("#{@__phi_user_id} accessing #{self.class.name} #{@__phi_user_id}.\n\t access logging triggered by method: #{method_name}")
+          @__phi_access_logged = true
         end
 
-        self.class.send(:alias_method, unwrapped_method, method_name)
-        self.class.send(:alias_method, method_name, wrapped_method)
-
-        self.class.__phi_methods_wrapped = self.class.__phi_methods_wrapped << method_name
+        send(unwrapped_method, *args, &block)
       end
+
+      self.class.send(:alias_method, unwrapped_method, method_name)
+      self.class.send(:alias_method, method_name, wrapped_method)
+
+      self.class.__phi_methods_wrapped = self.class.__phi_methods_wrapped << method_name
+    end
   end
 end

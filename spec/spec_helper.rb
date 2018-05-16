@@ -18,4 +18,9 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  config.after(:each) do
+    RequestStore.end!
+    RequestStore.clear!
+  end
 end

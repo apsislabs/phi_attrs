@@ -4,20 +4,21 @@ module PhiAttrs
   module PhiRecord
     extend ActiveSupport::Concern
 
-    class_methods do
-      @__phi_exclude_methods = []
-      @__phi_include_methods = []
-      @__phi_methods_wrapped = []
+    included do
+      class_attribute :__phi_exclude_methods
+      class_attribute :__phi_include_methods
+      class_attribute :__phi_methods_wrapped
 
+      self.__phi_methods_wrapped = []
+    end
+
+    class_methods do
       def exclude_from_phi(*methods)
-        logger.info("Excluding #{methods}")
-        @__phi_exclude_methods = methods.map(&:to_s)
-        logger.info("Excluded should be #{__phi_exclude_methods}")
+        self.__phi_exclude_methods = methods.map(&:to_s)
       end
 
       def include_in_phi(*methods)
-        logger.info("Including #{methods}")
-        @__phi_include_methods = methods.map(&:to_s)
+        self.__phi_include_methods = methods.map(&:to_s)
       end
 
       def allow_phi!(user_id, reason)
@@ -36,22 +37,6 @@ module PhiAttrs
         RequestStore.store[:phi_access].delete(name) if RequestStore.store[:phi_access].present?
         PhiAttrs::Logger.info('PHI access disabled')
       end
-
-      def __phi_methods_wrapped
-        @__phi_methods_wrapped || []
-      end
-
-      def __phi_methods_wrapped=(value)
-        @__phi_methods_wrapped = value
-      end
-
-      def __phi_exclude_methods
-        @__phi_exclude_methods
-      end
-
-      def __phi_include_methods
-        @__phi_include_methods
-      end
     end
 
     def initialize(*args)
@@ -60,8 +45,6 @@ module PhiAttrs
       # Disable PHI access by default
       @__phi_access_allowed = false
       @__phi_access_logged = false
-      @__phi_wrapped_methods = []
-      @__phi_wrapper_methods = []
 
       @__phi_log_id = persisted? ? attributes[self.class.primary_key] : object_id
       @__phi_log_key = "#{PHI_ACCESS_LOG_TAG} #{@__phi_log_id}"
@@ -89,6 +72,7 @@ module PhiAttrs
         @__phi_access_allowed = false
         @__phi_user_id = nil
         @__phi_access_reason = nil
+
         PhiAttrs::Logger.info('PHI access disabled')
       end
     end
@@ -116,18 +100,20 @@ module PhiAttrs
       self.class.send(:define_method, wrapped_method) do |*args, &block|
         raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI acces for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
 
-        unless @__phi_access_logged
-          PhiAttrs::Logger.info("#{@__phi_user_id} accessing #{self.class.name} #{@__phi_user_id}.\n\t access logging triggered by method: #{method_name}")
-          @__phi_access_logged = true
-        end
+        PhiAttrs::Logger.tagged(@__phi_log_key) do
+          unless @__phi_access_logged
+            PhiAttrs::Logger.info("#{@__phi_user_id} accessing #{self.class.name} #{@__phi_user_id}.\n\t access logging triggered by method: #{method_name}")
+            @__phi_access_logged = true
+          end
 
-        send(unwrapped_method, *args, &block)
+          send(unwrapped_method, *args, &block)
+        end
       end
 
       self.class.send(:alias_method, unwrapped_method, method_name)
       self.class.send(:alias_method, method_name, wrapped_method)
 
-      self.class.__phi_methods_wrapped = self.class.__phi_methods_wrapped << method_name
+      self.class.__phi_methods_wrapped << method_name
     end
   end
 end

@@ -22,6 +22,14 @@ RSpec.describe PhiAttrs do
   end
 
   context 'logging' do
+    it 'should log an error when raising an exception' do
+      expect(PhiAttrs::Logger.logger).to receive(:error).with('my error message')
+
+      expect {
+        raise PhiAttrs::Exceptions::PhiAccessException, 'my error message'
+      }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    end
+
     it 'should log an error for unauthorized access' do
       expect(PhiAttrs::Logger.logger).to receive(:error)
       expect { patient_john.birthday }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)

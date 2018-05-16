@@ -1,13 +1,14 @@
 example_id                      | status | run_time        |
 ------------------------------- | ------ | --------------- |
-./spec/phi_attrs_spec.rb[1:1]   | passed | 0.00134 seconds |
-./spec/phi_attrs_spec.rb[1:2:1] | passed | 0.00618 seconds |
-./spec/phi_attrs_spec.rb[1:2:2] | passed | 0.00054 seconds |
-./spec/phi_attrs_spec.rb[1:2:3] | passed | 0.00044 seconds |
-./spec/phi_attrs_spec.rb[1:3:1] | passed | 0.00566 seconds |
-./spec/phi_attrs_spec.rb[1:4:1] | passed | 0.00057 seconds |
-./spec/phi_attrs_spec.rb[1:4:2] | passed | 0.00054 seconds |
-./spec/phi_attrs_spec.rb[1:4:3] | passed | 0.00059 seconds |
-./spec/phi_attrs_spec.rb[1:5:1] | passed | 0.00055 seconds |
-./spec/phi_attrs_spec.rb[1:5:2] | passed | 0.00428 seconds |
-./spec/phi_attrs_spec.rb[1:5:3] | passed | 0.00075 seconds |
+./spec/phi_attrs_spec.rb[1:1]   | passed | 0.00124 seconds |
+./spec/phi_attrs_spec.rb[1:2:1] | passed | 0.00659 seconds |
+./spec/phi_attrs_spec.rb[1:2:2] | passed | 0.00056 seconds |
+./spec/phi_attrs_spec.rb[1:2:3] | passed | 0.00043 seconds |
+./spec/phi_attrs_spec.rb[1:3:1] | passed | 0.00662 seconds |
+./spec/phi_attrs_spec.rb[1:3:2] | passed | 0.00097 seconds |
+./spec/phi_attrs_spec.rb[1:4:1] | passed | 0.00076 seconds |
+./spec/phi_attrs_spec.rb[1:4:2] | passed | 0.0008 seconds  |
+./spec/phi_attrs_spec.rb[1:4:3] | passed | 0.0008 seconds  |
+./spec/phi_attrs_spec.rb[1:5:1] | passed | 0.00069 seconds |
+./spec/phi_attrs_spec.rb[1:5:2] | passed | 0.00565 seconds |
+./spec/phi_attrs_spec.rb[1:5:3] | passed | 0.0009 seconds  |

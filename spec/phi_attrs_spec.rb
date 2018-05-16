@@ -56,7 +56,7 @@ RSpec.describe PhiAttrs do
       expect { patient_jane.first_name }.not_to raise_error
     end
 
-    it 'only allows access to the authorized instance' do
+    skip 'only allows access to the authorized class' do
       patient_jane.allow_phi! 'test', 'unit tests'
 
       expect { patient_jane.first_name }.not_to raise_error
@@ -66,11 +66,11 @@ RSpec.describe PhiAttrs do
     it 'revokes access after calling disallow_phi!' do
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
-      patient_jane.allow_phi! 'test', 'unit tests'
+      PatientInfo.allow_phi! 'test', 'unit tests'
 
       expect { patient_jane.first_name }.not_to raise_error
 
-      patient_jane.disallow_phi!
+      PatientInfo.allow_phi! 'test', 'unit tests'
 
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
     end

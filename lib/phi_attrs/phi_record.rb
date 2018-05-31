@@ -110,7 +110,8 @@ module PhiAttrs
         end
       end
 
-      self.class.send(:alias_method, unwrapped_method, method_name)
+      # method_name => wrapped_method => unwrapped_method
+      self.class.send(:alias_method, unwrapped_method, method_name) 
       self.class.send(:alias_method, method_name, wrapped_method)
 
       self.class.__phi_methods_wrapped << method_name

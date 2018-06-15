@@ -5,6 +5,7 @@ require 'request_store'
 require 'phi_attrs/version'
 require 'phi_attrs/configure'
 require 'phi_attrs/railtie' if defined?(Rails)
+require 'phi_attrs/formatter'
 require 'phi_attrs/logger'
 require 'phi_attrs/exceptions'
 require 'phi_attrs/phi_record'
@@ -12,8 +13,10 @@ require 'phi_attrs/phi_record'
 module PhiAttrs
   def phi_model(with: nil, except: nil)
     include PhiRecord
+    logger = ActiveSupport::Logger.new(PhiAttrs.log_path)
+    logger.formatter = Formatter.new
+    file_logger = ActiveSupport::TaggedLogging.new(logger)
 
-    file_logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(PhiAttrs.log_path))
     PhiAttrs::Logger.logger = file_logger
   end
 
@@ -31,5 +34,3 @@ module PhiAttrs
     @@log_path = value
   end
 end
-
-

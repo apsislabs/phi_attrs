@@ -6,7 +6,13 @@ services:
     volumes:
       - bundle_cache:/bundle
       - .:/app
-    command: tail -f /etc/hosts
+    environment:
+      - BUNDLE_JOBS=5
+      - BUNDLE_PATH=/bundle
+      - BUNDLE_BIN=/bundle/bin
+      - GEM_HOME=/bundle
+    command:
+      - docker/start.sh
 
 volumes:
   bundle_cache:

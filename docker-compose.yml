@@ -6,7 +6,7 @@ services:
     volumes:
       - bundle_cache:/bundle
       - .:/app
-    command: docker/start.sh
+    command: tail -f /etc/hosts
 
 volumes:
   bundle_cache:

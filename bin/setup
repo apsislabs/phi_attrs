@@ -3,5 +3,5 @@ set -euo pipefail
 IFS=$'\n\t'
 set -vx
 
-bundle install
+bundle check || bundle install
 bundle exec appraisal install

@@ -31,6 +31,17 @@ class PatientInfo < ActiveRecord::Base
 end
 ```
 
+Access is granted on a model level:
+```ruby
+info = new PatientInfo
+info.allow_phi!("allowed_user@example.com", "Customer Service")
+```
+
+or a class:
+```ruby
+PatientInfo.allow_phi!("allowed_user@example.com", "Customer Service")
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

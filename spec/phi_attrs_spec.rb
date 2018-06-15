@@ -42,13 +42,44 @@ RSpec.describe PhiAttrs do
     end
 
     it 'should log when granting phi to class' do
+      patient_john # TODO Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
       expect(PhiAttrs::Logger.logger).to receive(:info)
       PatientInfo.allow_phi! 'test', 'unit tests'
     end
 
     it 'should log when revokes phi to class' do
+      patient_john # TODO Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
       expect(PhiAttrs::Logger.logger).to receive(:info)
       PatientInfo.disallow_phi!
+    end
+
+    it 'should log when accessing method' do
+      PatientInfo.allow_phi! 'test', 'unit tests'
+      expect(PhiAttrs::Logger.logger).to receive(:info)
+      patient_jane.first_name
+    end
+
+    it 'should log once when accessing multiple methods' do
+      PatientInfo.allow_phi! 'test', 'unit tests'
+      expect(PhiAttrs::Logger.logger).to receive(:info)
+      patient_jane.first_name
+      patient_jane.birthday
+    end
+
+    it 'should log object_id for unpersisted' do
+      PatientInfo.allow_phi! 'test', 'unit tests'
+      expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
+      expect(PhiAttrs::Logger.logger).to receive(:info)
+      patient_jane.first_name
+    end
+
+    it 'should log id for persisted' do
+      PatientInfo.allow_phi! 'test', 'unit tests'
+      patient_jane.save
+      expect(patient_jane.persisted?).to be true
+      expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
+      expect(PhiAttrs::Logger.logger).to receive(:info).and_call_original
+      patient_jane.first_name
     end
   end
 

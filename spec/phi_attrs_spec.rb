@@ -23,6 +23,7 @@ RSpec.describe PhiAttrs do
 
   context 'logging' do
     it 'should log an error when raising an exception' do
+      patient_john # TODO Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
       expect(PhiAttrs::Logger.logger).to receive(:error).with('my error message')
 
       expect {
@@ -33,6 +34,21 @@ RSpec.describe PhiAttrs do
     it 'should log an error for unauthorized access' do
       expect(PhiAttrs::Logger.logger).to receive(:error)
       expect { patient_john.birthday }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    end
+
+    it 'should log when granting phi to instance' do
+      expect(PhiAttrs::Logger.logger).to receive(:info)
+      patient_jane.allow_phi! 'test', 'unit tests'
+    end
+
+    it 'should log when granting phi to class' do
+      expect(PhiAttrs::Logger.logger).to receive(:info)
+      PatientInfo.allow_phi! 'test', 'unit tests'
+    end
+
+    it 'should log when revokes phi to class' do
+      expect(PhiAttrs::Logger.logger).to receive(:info)
+      PatientInfo.disallow_phi!
     end
   end
 

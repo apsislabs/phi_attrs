@@ -7,9 +7,13 @@ module PhiAttrs
     included do
       class_attribute :__phi_exclude_methods
       class_attribute :__phi_include_methods
+      class_attribute :__phi_extended_methods
       class_attribute :__phi_methods_wrapped
 
+      after_initialize :wrap_phi
+
       self.__phi_methods_wrapped = []
+      self.__phi_extended_methods = []
     end
 
     class_methods do
@@ -19,6 +23,10 @@ module PhiAttrs
 
       def include_in_phi(*methods)
         self.__phi_include_methods = methods.map(&:to_s)
+      end
+
+      def extend_phi_access(*methods)
+        self.__phi_extended_methods = methods.map(&:to_s)
       end
 
       def allow_phi!(user_id, reason)
@@ -42,9 +50,7 @@ module PhiAttrs
       end
     end
 
-    def initialize(*args)
-      super(*args)
-
+    def wrap_phi
       # Disable PHI access by default
       @__phi_access_allowed = false
       @__phi_access_logged = false
@@ -54,11 +60,14 @@ module PhiAttrs
     end
 
     def __phi_wrapped_methods
-      attribute_names - self.class.__phi_exclude_methods.to_a + self.class.__phi_include_methods.to_a - [self.class.primary_key]
+      associations = self.class.reflect_on_all_associations.map(&:name).map(&:to_s)
+      excluded_methods = self.class.__phi_exclude_methods.to_a
+      included_methods = self.class.__phi_include_methods.to_a
+      associations + attribute_names - excluded_methods + included_methods - [self.class.primary_key]
     end
 
     def allow_phi!(user_id, reason)
-      PhiAttrs::Logger.tagged( *phi_log_keys ) do
+      PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_allowed = true
         @__phi_user_id = user_id
         @__phi_access_reason = reason
@@ -107,8 +116,19 @@ module PhiAttrs
           raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
 
           unless @__phi_access_logged
-            PhiAttrs::Logger.info("'#{phi_allowed_by}' accessing #{self.class.name}.\n\t access logging triggered by method: #{method_name}")
+            PhiAttrs::Logger.info("'#{phi_allowed_by}' accessing #{self.class.name}. Triggered by method: #{method_name}")
             @__phi_access_logged = true
+          end
+
+          # extend PHI access to relationships if needed
+          if self.class.__phi_extended_methods.include? method_name
+
+            # get the unwrapped relation
+            relation = send(unwrapped_method, *args, &block)
+
+            if relation.class.included_modules.include?(PhiRecord)
+              relation.allow_phi!(phi_allowed_by, phi_access_reason) unless relation.phi_allowed?
+            end
           end
 
           send(unwrapped_method, *args, &block)

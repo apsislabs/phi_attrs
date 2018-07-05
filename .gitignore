@@ -14,3 +14,4 @@
 /test/sample/tmp/
 *.sqlite3
 *.log
+.rspec_status

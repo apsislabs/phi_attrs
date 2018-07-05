@@ -84,31 +84,64 @@ RSpec.describe PhiAttrs do
   end
 
   context 'instance authorized' do
-    it 'allows access to an authorized instance' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    context 'single record' do
+      it 'allows access to an authorized instance' do
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
-      patient_jane.allow_phi! 'test', 'unit tests'
+        patient_jane.allow_phi! 'test', 'unit tests'
 
-      expect { patient_jane.first_name }.not_to raise_error
+        expect { patient_jane.first_name }.not_to raise_error
+      end
+
+      it 'only allows access to the authorized instance' do
+        patient_jane.allow_phi! 'test', 'unit tests'
+
+        expect { patient_jane.first_name }.not_to raise_error
+        expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      end
+
+      it 'revokes access after calling disallow_phi!' do
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        patient_jane.allow_phi! 'test', 'unit tests'
+
+        expect { patient_jane.first_name }.not_to raise_error
+
+        patient_jane.disallow_phi!
+
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      end
+
+      it 'allows access on an instance that already exists' do
+        john = PatientInfo.create(first_name: 'John', last_name: 'Doe')
+        expect { john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        john_id = john.id
+        john = nil
+
+        john = PatientInfo.find(john_id)
+        expect { john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        john.allow_phi! 'test', 'unit tests'
+        expect { john.first_name }.not_to raise_error
+        expect(john.first_name).to eq 'John'
+      end
     end
 
-    it 'only allows access to the authorized instance' do
-      patient_jane.allow_phi! 'test', 'unit tests'
+    context 'collection' do
+      it 'allows access when fetched as a collection' do
+        jay = PatientInfo.create(first_name: "Jay")
+        bob = PatientInfo.create(first_name: "Bob")
+        moe = PatientInfo.create(first_name: "Moe")
 
-      expect { patient_jane.first_name }.not_to raise_error
-      expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-    end
+        patients = PatientInfo.all
 
-    it 'revokes access after calling disallow_phi!' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect(patients).to contain_exactly(jay, bob, moe)
+        expect { patients.map(&:first_name) }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
-      patient_jane.allow_phi! 'test', 'unit tests'
-
-      expect { patient_jane.first_name }.not_to raise_error
-
-      patient_jane.disallow_phi!
-
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        patients.map { |p| p.allow_phi! 'test', 'unit tests' }
+        expect { patients.map(&:first_name) }.not_to raise_error
+      end
     end
   end
 
@@ -136,6 +169,39 @@ RSpec.describe PhiAttrs do
       PatientInfo.disallow_phi!
 
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    end
+  end
+
+  context 'extended authorization' do
+    let(:mary_detail)  { PatientDetail.create(detail: 'Lorem Ipsum') }
+    let(:mary_address) { Address.create(address: '123 Street Ave') }
+    let(:patient_mary) { PatientInfo.create(first_name: 'Mary', last_name: 'Jay', address: mary_address, patient_detail: mary_detail) }
+
+    it 'extends access to extended association' do
+      expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_mary.patient_detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      patient_mary.allow_phi! 'test', 'unit tests'
+
+      expect { patient_mary.first_name }.not_to raise_error
+      expect { patient_mary.patient_detail.detail }.not_to raise_error
+      expect(patient_mary.patient_detail.detail).to eq 'Lorem Ipsum'
+    end
+
+    it 'does not extend to unextended association' do
+      expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_mary.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      patient_mary.allow_phi! 'test', 'unit tests'
+      expect { patient_mary.first_name }.not_to raise_error
+      expect { patient_mary.address }.not_to raise_error
+      expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      patient_mary.address.allow_phi! 'test', 'unit test'
+      expect { patient_mary.address.address }.not_to raise_error
+      expect(patient_mary.address.address).to eq '123 Street Ave'
     end
   end
 end

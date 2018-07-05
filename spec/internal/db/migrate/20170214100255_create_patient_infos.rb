@@ -8,8 +8,14 @@ class CreatePatientInfos < ActiveRecord::Migration[5.0]
     end
 
     create_table :patient_details do |t|
+      t.belongs_to :patient_info
       t.string :detail
       t.timestamps
+    end
+
+    create_table :addresses do |t|
+      t.belongs_to :patient_info
+      t.string :address
     end
   end
 end

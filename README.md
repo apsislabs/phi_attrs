@@ -32,15 +32,41 @@ end
 ```
 
 Access is granted on a model level:
+
 ```ruby
 info = new PatientInfo
 info.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
 
 or a class:
+
 ```ruby
 PatientInfo.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
+
+### Extending PHI Access
+
+Sometimes you'll have a single mental model that is composed of several `ActiveRecord` models joined by association. In this case, instead of calling `allow_phi!` on all joined models, we expose a shorthand of extending PHI access to related models.
+
+```ruby
+class PatientInfo < ActiveRecord::Base
+  phi_model
+end
+
+class Patient < ActiveRecord::Base
+  has_one :patient_info
+
+  phi_model
+
+  extend_phi_access :patient_info
+end
+
+patient = Patient.new
+patient.allow_phi!('user@example.com', 'reason')
+patient.patient_info.first_name
+```
+
+**NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check.
 
 ## Development
 
@@ -50,8 +76,8 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ### Docker
 
-* `docker-compose up`
-* `bin/ssh_to_container`
+-   `docker-compose up`
+-   `bin/ssh_to_container`
 
 ## Testing
 

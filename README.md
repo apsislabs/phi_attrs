@@ -1,5 +1,7 @@
 # PhiAttrs
 
+[![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
+
 ## Installation
 
 Add this line to your application's Gemfile:

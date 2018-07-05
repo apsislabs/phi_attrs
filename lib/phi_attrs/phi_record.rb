@@ -1,6 +1,12 @@
+# Namespace for classes and modules that handle PHI Attribute Access Logging
 module PhiAttrs
   PHI_ACCESS_LOG_TAG = 'PHI Access Log'.freeze
 
+  # Module for extending ActiveRecord models to handle PHI access logging
+  # and restrict access to attributes.
+  #
+  # @author Apsis Labs
+  # @since 0.1.0
   module PhiRecord
     extend ActiveSupport::Concern
 
@@ -17,18 +23,51 @@ module PhiAttrs
     end
 
     class_methods do
+      # Set methods to be excluded from PHI access logging.
+      #
+      # @param [Array<Symbol>] *methods Any number of methods to exclude
+      #
+      # @example
+      #   exclude_from_phi :foo, :bar
+      #
       def exclude_from_phi(*methods)
         self.__phi_exclude_methods = methods.map(&:to_s)
       end
 
+      # Set methods to be explicitly included in PHI access logging.
+      #
+      # @param [Array<Symbol>] *methods Any number of methods to include
+      #
+      # @example
+      #   include_in_phi :foo, :bar
+      #
       def include_in_phi(*methods)
         self.__phi_include_methods = methods.map(&:to_s)
       end
 
+      # Set of methods which should be implicitly allowed if this object
+      # is allowed. The methods that are extended should return ActiveRecord
+      # models that also extend PhiAttrs.
+      #
+      # If they do not, this is essentially an alias for PhiRecord#include_in_phi
+      #
+      # @param [Array<Symbol>] *methods Any number of methods to extend access to
+      #
+      # @example
+      #   extend_phi_access :foo, :bar
+      #
       def extend_phi_access(*methods)
         self.__phi_extended_methods = methods.map(&:to_s)
       end
 
+      # Enable PHI access for any instance of this class.
+      #
+      # @param [String] user_id   A unique identifier for the person accessing the PHI
+      # @param [String] reason    The reason for accessing PHI
+      #
+      # @example
+      #   Foo.allow_phi!('user@example.com', 'viewing patient record')
+      #
       def allow_phi!(user_id, reason)
         RequestStore.store[:phi_access] ||= {}
 
@@ -37,11 +76,17 @@ module PhiAttrs
           user_id: user_id,
           reason: reason
         }
+
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
           PhiAttrs::Logger.info("PHI Access Enabled for #{user_id}: #{reason}")
         end
       end
 
+      # Revoke PHI access for this class, if enabled by PhiRecord#allow_phi!
+      #
+      # @example
+      #   Foo.disallow_phi!
+      #
       def disallow_phi!
         RequestStore.store[:phi_access].delete(name) if RequestStore.store[:phi_access].present?
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
@@ -50,22 +95,27 @@ module PhiAttrs
       end
     end
 
-    def wrap_phi
-      # Disable PHI access by default
-      @__phi_access_allowed = false
-      @__phi_access_logged = false
-
-      # Wrap attributes with PHI Logger and Access Control
-      __phi_wrapped_methods.each { |attr| phi_wrap_method(attr) }
-    end
-
+    # Get all method names to be wrapped with PHI access logging
+    #
+    # @return [Array<String>] the method names to be wrapped with PHI access logging
+    #
     def __phi_wrapped_methods
       extended_methods = self.class.__phi_extended_methods.to_a
       excluded_methods = self.class.__phi_exclude_methods.to_a
       included_methods = self.class.__phi_include_methods.to_a
+
       extended_methods + attribute_names - excluded_methods + included_methods - [self.class.primary_key]
     end
 
+    # Enable PHI access for a single instance of this class.
+    #
+    # @param [String] user_id   A unique identifier for the person accessing the PHI
+    # @param [String] reason    The reason for accessing PHI
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   foo.allow_phi!('user@example.com', 'viewing patient record')
+    #
     def allow_phi!(user_id, reason)
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_allowed = true
@@ -76,6 +126,12 @@ module PhiAttrs
       end
     end
 
+    # Revoke PHI access for a single instance of this class
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   foo.disallow_phi!
+    #
     def disallow_phi!
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_allowed = false
@@ -86,25 +142,104 @@ module PhiAttrs
       end
     end
 
+    # Whether PHI access is allowed for a single instance of this class
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   foo.phi_allowed?
+    #
+    # @return [Boolean] whether PHI access is allowed for this instance
+    #
     def phi_allowed?
       @__phi_access_allowed || RequestStore.store.dig(:phi_access, self.class.name, :phi_access_allowed)
     end
 
-    def phi_allowed_by
-      @__phi_user_id || RequestStore.store.dig(:phi_access, self.class.name, :user_id)
-    end
-
-    def phi_access_reason
-      @__phi_access_reason || RequestStore.store.dig(:phi_access, self.class.name, :reason)
-    end
-
     private
 
+    # Entry point for wrapping methods with PHI access logging. This is called
+    # by an `after_initialize` hook from ActiveRecord.
+    #
+    # @private
+    #
+    def wrap_phi
+      # Disable PHI access by default
+      @__phi_access_allowed = false
+      @__phi_access_logged = false
+
+      # Wrap attributes with PHI Logger and Access Control
+      __phi_wrapped_methods.each { |attr| phi_wrap_method(attr) }
+    end
+
+    # Log Key for an instance of this class. If the instance is persisted in the
+    # database, then it is the primary key; otherwise it is the Ruby object_id
+    # in memory.
+    #
+    # This is used by the tagged logger for tagging all log entries to find
+    # the underlying model.
+    #
+    # @private
+    #
+    # @return [Array<String>] log key for an instance of this class
+    #
     def phi_log_keys
       @__phi_log_id = persisted? ? "Key: #{attributes[self.class.primary_key]}" : "Object: #{object_id}"
       @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, @__phi_log_id]
     end
 
+    # The unique identifier for whom access has been allowed on this instance.
+    # This is what was passed in when PhiRecord#allow_phi! was called.
+    #
+    # @private
+    #
+    # @return [String] the user_id passed in to allow_phi!
+    #
+    def phi_allowed_by
+      @__phi_user_id || RequestStore.store.dig(:phi_access, self.class.name, :user_id)
+    end
+
+    # The access reason for allowing access to this instance.
+    # This is what was passed in when PhiRecord#allow_phi! was called.
+    #
+    # @private
+    #
+    # @return [String] the reason passed in to allow_phi!
+    #
+    def phi_access_reason
+      @__phi_access_reason || RequestStore.store.dig(:phi_access, self.class.name, :reason)
+    end
+
+    # Core logic for wrapping methods in PHI access logging and access restriction.
+    #
+    # This method takes a single method name, and creates a new method using
+    # define_method; once this method is defined, the original method name
+    # is aliased to the new method, and the original method is renamed to a
+    # known key.
+    #
+    # @private
+    #
+    # @example
+    #   Foo::phi_wrap_method(:bar)
+    #
+    #   foo = Foo.find(1)
+    #   foo.bar # => raises PHI Access Exception
+    #
+    #   foo.allow_phi!('user@example.com', 'testing')
+    #
+    #   foo.bar # => returns original value of Foo#bar
+    #
+    #   # defines two new methods:
+    #   #   __bar_phi_wrapped
+    #   #   __bar_phi_unwrapped
+    #   #
+    #   # After these methods are defined
+    #   # an alias chain is created that
+    #   # roughly maps:
+    #   #
+    #   # bar => __bar_phi_wrapped => __bar_phi_unwrapped
+    #   #
+    #   # This ensures that all calls to Foo#bar pass
+    #   # through access logging.
+    #
     def phi_wrap_method(method_name)
       return if self.class.__phi_methods_wrapped.include? method_name
 

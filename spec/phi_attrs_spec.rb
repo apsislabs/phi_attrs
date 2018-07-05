@@ -84,31 +84,64 @@ RSpec.describe PhiAttrs do
   end
 
   context 'instance authorized' do
-    it 'allows access to an authorized instance' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    context 'single record' do
+      it 'allows access to an authorized instance' do
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
-      patient_jane.allow_phi! 'test', 'unit tests'
+        patient_jane.allow_phi! 'test', 'unit tests'
 
-      expect { patient_jane.first_name }.not_to raise_error
+        expect { patient_jane.first_name }.not_to raise_error
+      end
+
+      it 'only allows access to the authorized instance' do
+        patient_jane.allow_phi! 'test', 'unit tests'
+
+        expect { patient_jane.first_name }.not_to raise_error
+        expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      end
+
+      it 'revokes access after calling disallow_phi!' do
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        patient_jane.allow_phi! 'test', 'unit tests'
+
+        expect { patient_jane.first_name }.not_to raise_error
+
+        patient_jane.disallow_phi!
+
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      end
+
+      it 'allows access on an instance that already exists' do
+        john = PatientInfo.create(first_name: 'John', last_name: 'Doe')
+        expect { john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        john_id = john.id
+        john = nil
+
+        john = PatientInfo.find(john_id)
+        expect { john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        john.allow_phi! 'test', 'unit tests'
+        expect { john.first_name }.not_to raise_error
+        expect(john.first_name).to eq 'John'
+      end
     end
 
-    it 'only allows access to the authorized instance' do
-      patient_jane.allow_phi! 'test', 'unit tests'
+    context 'collection' do
+      it 'allows access when fetched as a collection' do
+        jay = PatientInfo.create(first_name: "Jay")
+        bob = PatientInfo.create(first_name: "Bob")
+        moe = PatientInfo.create(first_name: "Moe")
 
-      expect { patient_jane.first_name }.not_to raise_error
-      expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-    end
+        patients = PatientInfo.all
 
-    it 'revokes access after calling disallow_phi!' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect(patients).to contain_exactly(jay, bob, moe)
+        expect { patients.map(&:first_name) }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
-      patient_jane.allow_phi! 'test', 'unit tests'
-
-      expect { patient_jane.first_name }.not_to raise_error
-
-      patient_jane.disallow_phi!
-
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        patients.map { |p| p.allow_phi! 'test', 'unit tests' }
+        expect { patients.map(&:first_name) }.not_to raise_error
+      end
     end
   end
 

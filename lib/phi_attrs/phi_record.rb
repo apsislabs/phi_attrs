@@ -7,7 +7,10 @@ module PhiAttrs
     included do
       class_attribute :__phi_exclude_methods
       class_attribute :__phi_include_methods
+      class_attribute :__phi_extended_methods
       class_attribute :__phi_methods_wrapped
+
+      after_initialize :wrap_phi
 
       self.__phi_methods_wrapped = []
     end
@@ -19,6 +22,10 @@ module PhiAttrs
 
       def include_in_phi(*methods)
         self.__phi_include_methods = methods.map(&:to_s)
+      end
+
+      def extend_phi_access(*methods)
+        self.__phi_extended_methods = methods.map(&:to_s)
       end
 
       def allow_phi!(user_id, reason)
@@ -42,9 +49,7 @@ module PhiAttrs
       end
     end
 
-    def initialize(*args)
-      super(*args)
-
+    def wrap_phi
       # Disable PHI access by default
       @__phi_access_allowed = false
       @__phi_access_logged = false

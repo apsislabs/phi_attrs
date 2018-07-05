@@ -179,7 +179,6 @@ RSpec.describe PhiAttrs do
 
     it 'extends access to extended association' do
       expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-      expect { patient_mary.patient_detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
       expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
       patient_mary.allow_phi! 'test', 'unit tests'
@@ -191,12 +190,10 @@ RSpec.describe PhiAttrs do
 
     it 'does not extend to unextended association' do
       expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-      expect { patient_mary.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
       expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
       patient_mary.allow_phi! 'test', 'unit tests'
       expect { patient_mary.first_name }.not_to raise_error
-      expect { patient_mary.address }.not_to raise_error
       expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
       patient_mary.address.allow_phi! 'test', 'unit test'

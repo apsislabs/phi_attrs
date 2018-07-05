@@ -60,10 +60,10 @@ module PhiAttrs
     end
 
     def __phi_wrapped_methods
-      associations = self.class.reflect_on_all_associations.map(&:name).map(&:to_s)
+      extended_methods = self.class.__phi_extended_methods.to_a
       excluded_methods = self.class.__phi_exclude_methods.to_a
       included_methods = self.class.__phi_include_methods.to_a
-      associations + attribute_names - excluded_methods + included_methods - [self.class.primary_key]
+      extended_methods + attribute_names - excluded_methods + included_methods - [self.class.primary_key]
     end
 
     def allow_phi!(user_id, reason)

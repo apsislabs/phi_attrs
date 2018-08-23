@@ -195,11 +195,26 @@ RSpec.describe PhiAttrs do
   context 'class authorized' do
     it 'allows access to any instance' do
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      PatientInfo.allow_phi('test', 'unit tests') do
+        expect { patient_jane.first_name }.not_to raise_error
+      end
+
       PatientInfo.allow_phi! 'test', 'unit tests'
       expect { patient_jane.first_name }.not_to raise_error
     end
 
     it 'only allows access to the authorized class' do
+      expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      PatientInfo.allow_phi('test', 'unit tests') do
+        expect { patient_jane.first_name }.not_to raise_error
+        expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      end
+
+      expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
       PatientInfo.allow_phi! 'test', 'unit tests'
 
       expect { patient_jane.first_name }.not_to raise_error

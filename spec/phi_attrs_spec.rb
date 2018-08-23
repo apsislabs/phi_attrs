@@ -151,18 +151,43 @@ RSpec.describe PhiAttrs do
     end
 
     context 'collection' do
+      let(:jay) { PatientInfo.create(first_name: "Jay") }
+      let(:bob) { PatientInfo.create(first_name: "Bob") }
+      let(:moe) { PatientInfo.create(first_name: "Moe") }
+      let(:patients) { [jay, bob, moe] }
+
       it 'allows access when fetched as a collection' do
-        jay = PatientInfo.create(first_name: "Jay")
-        bob = PatientInfo.create(first_name: "Bob")
-        moe = PatientInfo.create(first_name: "Moe")
-
-        patients = PatientInfo.all
-
         expect(patients).to contain_exactly(jay, bob, moe)
         expect { patients.map(&:first_name) }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
         patients.map { |p| p.allow_phi! 'test', 'unit tests' }
         expect { patients.map(&:first_name) }.not_to raise_error
+      end
+
+      context 'with targets' do
+        let(:non_target) { PatientInfo.create(first_name: 'Private') }
+
+        it 'allow_phi allows access to all members of a collection' do
+          patients.each do |patient|
+            expect { patient.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+          end
+
+          expect {
+            PatientInfo.allow_phi(patients, 'test', 'unit tests') do
+              expect(patients.map(&:first_name)).to contain_exactly("Jay", "Bob", "Moe")
+            end
+          }.not_to raise_error
+        end
+
+        it 'allow_phi does not allow access to non-targets' do
+          expect { non_target.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+          expect {
+            PatientInfo.allow_phi(patients, 'test', 'unit tests') do
+              expect { non_target.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+            end
+          }.not_to raise_error
+        end
       end
     end
   end

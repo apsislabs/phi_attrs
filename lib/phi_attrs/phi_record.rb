@@ -84,9 +84,10 @@ module PhiAttrs
 
       # Enable PHI access for any instance of this class in the block given only.
       #
-      # @param [String] user_id   A unique identifier for the person accessing the PHI
-      # @param [String] reason    The reason for accessing PHI
-      # &block [block]            The block in which PHI access is allowed for the class
+      # @param [collection of PhiRecord]   The PhiRecords to allow access to
+      # @param [String] user_id            A unique identifier for the person accessing the PHI
+      # @param [String] reason             The reason for accessing PHI
+      # &block [block]                     The block in which PHI access is allowed for the class
       #
       # @example
       #   Foo.allow_phi('user@example.com', 'viewing patient record') do
@@ -94,12 +95,29 @@ module PhiAttrs
       #   end
       #   # PHI Access Disallowed
       #
-      def allow_phi(user_id, reason)
-        allow_phi!(user_id, reason)
+      def allow_phi(targets, user_id, reason = nil)
+        if reason.nil?
+          reason = user_id
+          user_id = targets
+          targets = nil
+        else
+          raise ArgumentException, 'targets must be iterable with each' unless targets.respond_to?(:each)
+          raise ArgumentException, 'targets must all have `allow_phi!` methods' unless targets.all? { |t| t.respond_to?(:allow_phi!) }
+        end
+
+        if targets.nil?
+          allow_phi!(user_id, reason)
+        else
+          targets.each { |t| t.allow_phi!(user_id, reason) }
+        end
 
         yield if block_given?
 
-        disallow_phi!
+        if targets.nil?
+          disallow_phi!
+        else
+          targets.each { |t| t.disallow_phi! }
+        end
       end
 
       # Explicitly disallow phi access in a specific area of code. This does not
@@ -108,17 +126,17 @@ module PhiAttrs
       # &block [block] The block in which PHI access is explicitly disallowed.
       #
       # @example
-      # # PHI Access Disallowed
-      # Foo.disallow_phi
-      #   # PHI Access *Still* Disallowed
-      # end
-      # # PHI Access *Still, still* Disallowed
-      # Foo.allow_phi!('user@example.com', 'viewing patient record')
-      # # PHI Access Allowed
-      # Foo.disallow_phi do
       #   # PHI Access Disallowed
-      # end
-      # # PHI Access Allowed Again
+      #   Foo.disallow_phi
+      #     # PHI Access *Still* Disallowed
+      #   end
+      #   # PHI Access *Still, still* Disallowed
+      #   Foo.allow_phi!('user@example.com', 'viewing patient record')
+      #   # PHI Access Allowed
+      #   Foo.disallow_phi do
+      #     # PHI Access Disallowed
+      #   end
+      #   # PHI Access Allowed Again
       def disallow_phi
         __phi_stack.push({
           phi_access_allowed: false

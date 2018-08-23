@@ -71,17 +71,62 @@ module PhiAttrs
       #   Foo.allow_phi!('user@example.com', 'viewing patient record')
       #
       def allow_phi!(user_id, reason)
-        RequestStore.store[:phi_access] ||= {}
-
-        RequestStore.store[:phi_access][name] ||= {
+        self.__phi_stack.push({
           phi_access_allowed: true,
           user_id: user_id,
           reason: reason
-        }
+        })
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
           PhiAttrs::Logger.info("PHI Access Enabled for #{user_id}: #{reason}")
         end
+      end
+
+      # Enable PHI access for any instance of this class in the block given only.
+      #
+      # @param [String] user_id   A unique identifier for the person accessing the PHI
+      # @param [String] reason    The reason for accessing PHI
+      # &block [block]            The block in which PHI access is allowed for the class
+      #
+      # @example
+      #   Foo.allow_phi('user@example.com', 'viewing patient record') do
+      #     # PHI Access Allowed
+      #   end
+      #   # PHI Access Disallowed
+      #
+      def allow_phi(user_id, reason)
+        allow_phi!(user_id, reason)
+
+        yield if block_given?
+
+        disallow_phi!
+      end
+
+      # Explicitly disallow phi access in a specific area of code. This does not
+      # play nicely with the mutating versions of `allow_phi!` and `disallow_phi!`
+      #
+      # &block [block] The block in which PHI access is explicitly disallowed.
+      #
+      # @example
+      # # PHI Access Disallowed
+      # Foo.disallow_phi
+      #   # PHI Access *Still* Disallowed
+      # end
+      # # PHI Access *Still, still* Disallowed
+      # Foo.allow_phi!('user@example.com', 'viewing patient record')
+      # # PHI Access Allowed
+      # Foo.disallow_phi do
+      #   # PHI Access Disallowed
+      # end
+      # # PHI Access Allowed Again
+      def disallow_phi
+        __phi_stack.push({
+          phi_access_allowed: false
+        })
+
+        yield if block_given?
+
+        __phi_stack.pop
       end
 
       # Revoke PHI access for this class, if enabled by PhiRecord#allow_phi!
@@ -90,10 +135,15 @@ module PhiAttrs
       #   Foo.disallow_phi!
       #
       def disallow_phi!
-        RequestStore.store[:phi_access].delete(name) if RequestStore.store[:phi_access].present?
+        __phi_stack.pop
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
           PhiAttrs::Logger.info('PHI access disabled')
         end
+      end
+
+      def __phi_stack
+        RequestStore.store[:phi_access] ||= {}
+        RequestStore.store[:phi_access][name] ||= []
       end
     end
 
@@ -127,15 +177,42 @@ module PhiAttrs
     #
     def allow_phi!(user_id, reason)
       PhiAttrs::Logger.tagged(*phi_log_keys) do
-        @__phi_access_allowed = true
-        @__phi_user_id = user_id
-        @__phi_access_reason = reason
+        @__phi_access_stack.push({
+          phi_access_allowed: true,
+          user_id: user_id,
+          access_reason: reason,
+        })
 
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
       end
     end
 
-    # Revoke PHI access for a single instance of this class
+
+    # Enable PHI access for a single instance of this class inside the block.
+    # Nested calls to allow_phi will log once per nested call
+    #
+    # @param [String] user_id   A unique identifier for the person accessing the PHI
+    # @param [String] reason    The reason for accessing PHI
+    # @yield                    The block in which phi access is allowed
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   foo.allow_phi('user@example.com', 'viewing patient record') do
+    #    # PHI Access Allowed Here
+    #   end
+    #   # PHI Access Disallowed Here
+    #
+    def allow_phi(user_id, reason)
+      allow_phi!(user_id, reason)
+
+      yield if block_given?
+
+      disallow_phi!
+    end
+
+    # Revoke PHI access for a single instance of this class.
+    #
+    # @yield   The block in which phi access is explicitly disallowed
     #
     # @example
     #   foo = Foo.find(1)
@@ -143,9 +220,7 @@ module PhiAttrs
     #
     def disallow_phi!
       PhiAttrs::Logger.tagged(*phi_log_keys) do
-        @__phi_access_allowed = false
-        @__phi_user_id = nil
-        @__phi_access_reason = nil
+        @__phi_access_stack.pop
 
         PhiAttrs::Logger.info('PHI access disabled')
       end
@@ -160,7 +235,7 @@ module PhiAttrs
     # @return [Boolean] whether PHI access is allowed for this instance
     #
     def phi_allowed?
-      @__phi_access_allowed || RequestStore.store.dig(:phi_access, self.class.name, :phi_access_allowed)
+      phi_context != nil && phi_context[:phi_access_allowed]
     end
 
     private
@@ -172,8 +247,7 @@ module PhiAttrs
     #
     def wrap_phi
       # Disable PHI access by default
-      @__phi_access_allowed = false
-      @__phi_access_logged = false
+      @__phi_access_stack = []
 
       # Wrap attributes with PHI Logger and Access Control
       __phi_wrapped_methods.each { |m| phi_wrap_method(m) }
@@ -204,7 +278,7 @@ module PhiAttrs
     # @return [String] the user_id passed in to allow_phi!
     #
     def phi_allowed_by
-      @__phi_user_id || RequestStore.store.dig(:phi_access, self.class.name, :user_id)
+      phi_context[:user_id]
     end
 
     # The access reason for allowing access to this instance.
@@ -215,7 +289,19 @@ module PhiAttrs
     # @return [String] the reason passed in to allow_phi!
     #
     def phi_access_reason
-      @__phi_access_reason || RequestStore.store.dig(:phi_access, self.class.name, :reason)
+      phi_context[:reason]
+    end
+
+    def phi_context
+      instance_phi_context || class_phi_context
+    end
+
+    def instance_phi_context
+      @__phi_access_stack && @__phi_access_stack[-1]
+    end
+
+    def class_phi_context
+      self.class.__phi_stack[-1]
     end
 
     # Core logic for wrapping methods in PHI access logging and access restriction.
@@ -260,9 +346,9 @@ module PhiAttrs
         PhiAttrs::Logger.tagged(*phi_log_keys) do
           raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
 
-          unless @__phi_access_logged
+          unless phi_context[:logged]
             PhiAttrs::Logger.info("'#{phi_allowed_by}' accessing #{self.class.name}. Triggered by method: #{method_name}")
-            @__phi_access_logged = true
+            phi_context[:logged] = true
           end
 
           send(unwrapped_method, *args, &block)

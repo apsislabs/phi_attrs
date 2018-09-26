@@ -158,7 +158,7 @@ module PhiAttrs
       def disallow_phi!
         __phi_stack.pop
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
-          PhiAttrs::Logger.info('PHI access disabled')
+          PhiAttrs::Logger.info('PHI access disabled') # TODO: Log which frame
         end
       end
 
@@ -241,6 +241,12 @@ module PhiAttrs
     #
     def disallow_phi!
       PhiAttrs::Logger.tagged(*phi_log_keys) do
+        self.class.__phi_methods_extended.each do |method_name|
+          unwrapped_method = :"__#{method_name}_phi_access_original"
+          relation = send(unwrapped_method)
+          relation.disallow_phi! if relation.present? && relation.phi_allowed?
+        end
+
         @__phi_access_stack.pop
 
         PhiAttrs::Logger.info('PHI access disabled')

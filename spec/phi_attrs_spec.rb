@@ -295,9 +295,6 @@ RSpec.describe PhiAttrs do
           expect { patient_mary.patient_detail.detail }.not_to raise_error
           expect(patient_mary.patient_detail.detail).to eq('Lorem Ipsum')
         end
-
-        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-        expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
       end
 
       it 'does not extend to unextended association' do
@@ -313,8 +310,16 @@ RSpec.describe PhiAttrs do
         expect { patient_mary.address.address }.not_to raise_error
         expect(patient_mary.address.address).to eq('123 Street Ave')
       end
+
+      it 'revokes access after block' do
+        patient_mary.allow_phi('test', 'unit tests') do
+          expect { patient_mary.patient_detail.detail }.not_to raise_error
+          expect(patient_mary.patient_detail.detail).to eq('Lorem Ipsum')
+        end
+
+        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      end
     end
-
-
   end
 end

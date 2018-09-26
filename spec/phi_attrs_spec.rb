@@ -126,6 +126,22 @@ RSpec.describe PhiAttrs do
         expect { john.first_name }.not_to raise_error
         expect(john.first_name).to eq 'John'
       end
+
+      it 'rejects calls to allow_phi! with blank values' do
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        patient_jane.allow_phi! '', ''
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        patient_jane.allow_phi! 'ok', ''
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        patient_jane.allow_phi! '', 'ok'
+        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+        patient_jane.allow_phi! 'ok', 'ok'
+        expect { patient_jane.first_name }.not_to raise_error
+      end
     end
 
     context 'collection' do
@@ -169,6 +185,22 @@ RSpec.describe PhiAttrs do
       PatientInfo.disallow_phi!
 
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+    end
+
+    it 'rejects calls to allow_phi! with blank values' do
+      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      PatientInfo.allow_phi! '', ''
+      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      PatientInfo.allow_phi! 'ok', ''
+      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      PatientInfo.allow_phi! '', 'ok'
+      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+
+      PatientInfo.allow_phi! 'ok', 'ok'
+      expect { patient_jane.first_name }.not_to raise_error
     end
   end
 

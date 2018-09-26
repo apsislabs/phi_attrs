@@ -128,19 +128,10 @@ RSpec.describe PhiAttrs do
       end
 
       it 'rejects calls to allow_phi! with blank values' do
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-        patient_jane.allow_phi! '', ''
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-        patient_jane.allow_phi! 'ok', ''
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-        patient_jane.allow_phi! '', 'ok'
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-        patient_jane.allow_phi! 'ok', 'ok'
-        expect { patient_jane.first_name }.not_to raise_error
+        expect { patient_jane.allow_phi! '', '' }.to raise_error(ArgumentError)
+        expect { patient_jane.allow_phi! 'ok', '' }.to raise_error(ArgumentError)
+        expect { patient_jane.allow_phi! '', 'ok' }.to raise_error(ArgumentError)
+        expect { patient_jane.allow_phi! 'ok', 'ok' }.not_to raise_error
       end
     end
 
@@ -187,20 +178,11 @@ RSpec.describe PhiAttrs do
       expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
     end
 
-    it 'rejects calls to allow_phi! with blank values' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-      PatientInfo.allow_phi! '', ''
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-      PatientInfo.allow_phi! 'ok', ''
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-      PatientInfo.allow_phi! '', 'ok'
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-
-      PatientInfo.allow_phi! 'ok', 'ok'
-      expect { patient_jane.first_name }.not_to raise_error
+    it 'raises ArgumentError for allow_phi! with blank values' do
+      expect { PatientInfo.allow_phi! '', '' }.to raise_error(ArgumentError)
+      expect { PatientInfo.allow_phi! 'ok', '' }.to raise_error(ArgumentError)
+      expect { PatientInfo.allow_phi! '', 'ok' }.to raise_error(ArgumentError)
+      expect { PatientInfo.allow_phi! 'ok', 'ok' }.not_to raise_error
     end
   end
 

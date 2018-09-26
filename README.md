@@ -1,12 +1,14 @@
-# PhiAttrs
+# phi_attrs [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
 
-[![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
+HIPAA compliant PHI access logging for Ruby on Rails.
 
-According to [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) § 164.312(b), HIPAA covered entities are required to:
+
+
+According to [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) `§ 164.312(b)`, HIPAA covered entities are required to:
 
 > Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.
 
-The `phi_attrs` gem is intended to assist with implementing logging to comply with the access log requirements of § 164.308(a)(1)(ii)(D):
+The `phi_attrs` gem is intended to assist with implementing logging to comply with the access log requirements of `§ 164.308(a)(1)(ii)(D)`:
 
 > Information system activity review (Required). Implement procedures to regularly review records of information system activity, such as audit logs, access reports, and security incident tracking reports.
 

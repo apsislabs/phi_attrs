@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
 
-According to [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) § 164.312(b):
+According to [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) § 164.312(b), HIPAA covered entities are required to:
 
 > Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.
 

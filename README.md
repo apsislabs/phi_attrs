@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
 
-According to HIPAA Security Rule § 164.312(b):
+According to [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) § 164.312(b):
 
 > Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.
 
@@ -110,3 +110,5 @@ The gem is available as open source under the terms of the [MIT License](https:/
 ## Legal Disclaimer
 
 Apsis Labs, LLP is not a law firm and does not provide legal advice. The information in this repo and software does not constitute legal advice, nor does usage of this software create an attorney-client relationship.
+
+Apsis Labs, LLP is not a HIPAA covered entity, and usage of this software does not create a business associate relationship, nor does enact a business associate agreement.

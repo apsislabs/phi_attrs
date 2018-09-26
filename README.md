@@ -36,7 +36,7 @@ end
 Access is granted on a model level:
 
 ```ruby
-info = new PatientInfo
+info = PatientInfo.new
 info.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
 

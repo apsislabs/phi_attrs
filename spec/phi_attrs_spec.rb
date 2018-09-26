@@ -173,7 +173,7 @@ RSpec.describe PhiAttrs do
           end
 
           expect {
-            PatientInfo.allow_phi(patients, 'test', 'unit tests') do
+            PatientInfo.allow_phi('test', 'unit tests', allow_only: patients) do
               expect(patients.map(&:first_name)).to contain_exactly("Jay", "Bob", "Moe")
             end
           }.not_to raise_error
@@ -183,10 +183,30 @@ RSpec.describe PhiAttrs do
           expect { non_target.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
 
           expect {
-            PatientInfo.allow_phi(patients, 'test', 'unit tests') do
+            PatientInfo.allow_phi('test', 'unit tests', allow_only: patients) do
               expect { non_target.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
             end
           }.not_to raise_error
+        end
+
+        context 'invalid targets' do
+          it 'raises exception when targeting an unexpected class' do
+            address = Address.create
+
+            expect {
+              PatientInfo.allow_phi('test', 'unit tests', allow_only: [jay, address]) do
+                jay.first_name
+              end
+            }.to raise_error(ArgumentError)
+          end
+
+          it 'raises exception when given a non-iterable' do
+            expect {
+              PatientInfo.allow_phi('test', 'unit tests', allow_only: jay) do
+                jay.first_name
+              end
+            }.to raise_error(ArgumentError)
+          end
         end
       end
     end

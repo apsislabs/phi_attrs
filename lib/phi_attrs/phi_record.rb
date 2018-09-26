@@ -84,10 +84,10 @@ module PhiAttrs
 
       # Enable PHI access for any instance of this class in the block given only.
       #
-      # @param [collection of PhiRecord]   The PhiRecords to allow access to
-      # @param [String] user_id            A unique identifier for the person accessing the PHI
-      # @param [String] reason             The reason for accessing PHI
-      # &block [block]                     The block in which PHI access is allowed for the class
+      # @param [String] user_id                       A unique identifier for the person accessing the PHI
+      # @param [String] reason                        The reason for accessing PHI
+      # @param [collection of PhiRecord] allow_only   Specific PhiRecords to allow access to
+      # &block [block]                                The block in which PHI access is allowed for the class
       #
       # @example
       #   Foo.allow_phi('user@example.com', 'viewing patient record') do
@@ -95,28 +95,31 @@ module PhiAttrs
       #   end
       #   # PHI Access Disallowed
       #
-      def allow_phi(targets, user_id, reason = nil)
-        if reason.nil?
-          reason = user_id
-          user_id = targets
-          targets = nil
-        else
-          raise ArgumentException, 'targets must be iterable with each' unless targets.respond_to?(:each)
-          raise ArgumentException, 'targets must all have `allow_phi!` methods' unless targets.all? { |t| t.respond_to?(:allow_phi!) }
+      # @example
+      #   Foo.allow_phi('user@example.com', 'exporting patient list', allow_only: list_of_foos) do
+      #     # PHI Access Allowed for `list_of_foo` only
+      #   end
+      #   # PHI Access Disallowed
+      #
+      def allow_phi(user_id, reason, allow_only: nil)
+        if allow_only.present?
+          raise ArgumentError, 'allow_only must be iterable with each' unless allow_only.respond_to?(:each)
+          raise ArgumentError, "allow_only must all be `#{name}` objects" unless allow_only.all? { |t| t.is_a?(self) }
+          raise ArgumentError, 'allow_only must all have `allow_phi!` methods' unless allow_only.all? { |t| t.respond_to?(:allow_phi!) }
         end
 
-        if targets.nil?
+        if allow_only.nil?
           allow_phi!(user_id, reason)
         else
-          targets.each { |t| t.allow_phi!(user_id, reason) }
+          allow_only.each { |t| t.allow_phi!(user_id, reason) }
         end
 
         yield if block_given?
 
-        if targets.nil?
+        if allow_only.nil?
           disallow_phi!
         else
-          targets.each { |t| t.disallow_phi! }
+          allow_only.each { |t| t.disallow_phi! }
         end
       end
 

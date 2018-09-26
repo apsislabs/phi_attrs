@@ -2,6 +2,20 @@
 
 [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
 
+According to HIPAA Security Rule § 164.312(b):
+
+> Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.
+
+The `phi_attrs` gem is intended to assist with implementing logging to comply with the access log requirements of § 164.308(a)(1)(ii)(D):
+
+> Information system activity review (Required). Implement procedures to regularly review records of information system activity, such as audit logs, access reports, and security incident tracking reports.
+
+To do so, `phi_attrs` extends `ActiveRecord` models by adding automated logging and explicit access control methods. The access control mechanism creates a separate `phi_access_log`.
+
+**Please Note:** while `phi_attrs` helps facilitate access logging, it still requires due diligence by developers, both in ensuring that models and attributes which store PHI are flagged with `phi_model` and that calls to `allow_phi!` properly attribute both a _unique_ identifier and an explicit reason for PHI access.
+
+**Please Note:** there are other aspects of building a HIPAA secure application which are not addressed by `phi_attrs`, and as such _use of `phi_attrs` on its own does not ensure HIPAA Compliance_. For further reading on how to ensure your application meets the HIPAA security standards, review the [HHS Security Series Technical Safeguards](https://www.hhs.gov/sites/default/files/ocr/privacy/hipaa/administrative/securityrule/techsafeguards.pdf), and consult your compliance and legal counsel.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -92,3 +106,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/wkirby
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+
+## Legal Disclaimer
+
+Apsis Labs, LLP is not a law firm and does not provide legal advice. The information in this repo and software does not constitute legal advice, nor does usage of this software create an attorney-client relationship.

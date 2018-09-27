@@ -71,6 +71,8 @@ module PhiAttrs
       #   Foo.allow_phi!('user@example.com', 'viewing patient record')
       #
       def allow_phi!(user_id, reason)
+        raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
+
         RequestStore.store[:phi_access] ||= {}
 
         RequestStore.store[:phi_access][name] ||= {
@@ -126,6 +128,8 @@ module PhiAttrs
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
     def allow_phi!(user_id, reason)
+      raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
+
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_allowed = true
         @__phi_user_id = user_id

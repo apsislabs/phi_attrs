@@ -2,8 +2,6 @@
 
 HIPAA compliant PHI access logging for Ruby on Rails.
 
-
-
 According to [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html) `§ 164.312(b)`, HIPAA covered entities are required to:
 
 > Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use electronic protected health information.
@@ -17,6 +15,10 @@ To do so, `phi_attrs` extends `ActiveRecord` models by adding automated logging 
 **Please Note:** while `phi_attrs` helps facilitate access logging, it still requires due diligence by developers, both in ensuring that models and attributes which store PHI are flagged with `phi_model` and that calls to `allow_phi!` properly attribute both a _unique_ identifier and an explicit reason for PHI access.
 
 **Please Note:** there are other aspects of building a HIPAA secure application which are not addressed by `phi_attrs`, and as such _use of `phi_attrs` on its own does not ensure HIPAA Compliance_. For further reading on how to ensure your application meets the HIPAA security standards, review the [HHS Security Series Technical Safeguards](https://www.hhs.gov/sites/default/files/ocr/privacy/hipaa/administrative/securityrule/techsafeguards.pdf) and [Summary of the HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html), in addition to consulting your compliance and legal counsel.
+
+## Stability
+
+All versions of this project below `1.0.0` should be considered unstable beta software. Even minor-version updates may introduce breaking changes to the public API at this stage. We strongly suggest that you lock the installed version in your Gemfile to avoid unintended breaking updates.
 
 ## Installation
 

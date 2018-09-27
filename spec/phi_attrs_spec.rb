@@ -258,7 +258,8 @@ RSpec.describe PhiAttrs do
   context 'extended authorization' do
     let(:mary_detail)  { PatientDetail.create(detail: 'Lorem Ipsum') }
     let(:mary_address) { Address.create(address: '123 Street Ave') }
-    let(:patient_mary) { PatientInfo.create(first_name: 'Mary', last_name: 'Jay', address: mary_address, patient_detail: mary_detail) }
+    let(:mary_records) { [HealthRecord.create(data: 'dolor sit amet'), HealthRecord.create(data: 'consectetur adipiscing elit')] }
+    let(:patient_mary) { PatientInfo.create(first_name: 'Mary', last_name: 'Jay', address: mary_address, patient_detail: mary_detail, health_records: mary_records) }
 
     context 'plain access' do
       it 'extends access to extended association' do
@@ -283,6 +284,13 @@ RSpec.describe PhiAttrs do
         patient_mary.address.allow_phi! 'test', 'unit test'
         expect { patient_mary.address.address }.not_to raise_error
         expect(patient_mary.address.address).to eq '123 Street Ave'
+      end
+
+      it 'extends access to :has_many associations' do
+        expect { patient_mary.health_records.first.data }.to raise_error(access_error)
+
+        patient_mary.allow_phi!('test', 'has_many test')
+        expect { patient_mary.health_records.first.data }.not_to raise_error
       end
     end
 
@@ -312,6 +320,14 @@ RSpec.describe PhiAttrs do
         expect(patient_mary.address.address).to eq('123 Street Ave')
       end
 
+      it 'extends access to :has_many associations' do
+        expect { patient_mary.health_records.first.data }.to raise_error(access_error)
+
+        patient_mary.allow_phi!('test', 'has_many test') do
+          expect { patient_mary.health_records.first.data }.not_to raise_error
+        end
+      end
+
       it 'revokes access after block' do
         patient_mary.allow_phi('test', 'unit tests') do
           expect { patient_mary.patient_detail.detail }.not_to raise_error
@@ -320,6 +336,7 @@ RSpec.describe PhiAttrs do
 
         expect { patient_mary.first_name }.to raise_error(access_error)
         expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
+        expect { patient_mary.health_records.first.data }.to raise_error(access_error)
       end
     end
   end

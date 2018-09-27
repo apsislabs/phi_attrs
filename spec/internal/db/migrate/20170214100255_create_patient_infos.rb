@@ -17,5 +17,10 @@ class CreatePatientInfos < ActiveRecord::Migration[5.0]
       t.belongs_to :patient_info
       t.string :address
     end
+
+    create_table :health_records do |t|
+      t.belongs_to :patient_info
+      t.string :data
+    end
   end
 end

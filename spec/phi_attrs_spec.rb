@@ -2,6 +2,7 @@ RSpec.describe PhiAttrs do
   let(:patient_john) { PatientInfo.new(first_name: 'John', last_name: 'Doe') }
   let(:patient_jane) { PatientInfo.new(first_name: 'Jane', last_name: 'Doe') }
   let(:patient_detail) { PatientDetail.new(detail: 'Lorem Ipsum') }
+  let(:patient_with_detail) { PatientInfo.new(first_name: 'Jack', last_name: 'Doe', patient_detail: patient_detail)}
 
   it 'has a version number' do
     expect(PhiAttrs::VERSION).not_to be nil
@@ -9,11 +10,11 @@ RSpec.describe PhiAttrs do
 
   context 'unauthorized' do
     it 'raises an error on default attribute' do
-      expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_john.first_name }.to raise_error(access_error)
     end
 
     it 'raises an error on included method' do
-      expect { patient_john.birthday }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_john.birthday }.to raise_error(access_error)
     end
 
     it 'does not raise an error on excluded attribute' do
@@ -28,12 +29,12 @@ RSpec.describe PhiAttrs do
 
       expect {
         raise PhiAttrs::Exceptions::PhiAccessException, 'my error message'
-      }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      }.to raise_error(access_error)
     end
 
     it 'should log an error for unauthorized access' do
       expect(PhiAttrs::Logger.logger).to receive(:error)
-      expect { patient_john.birthday }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_john.birthday }.to raise_error(access_error)
     end
 
     it 'should log when granting phi to instance' do
@@ -97,13 +98,13 @@ RSpec.describe PhiAttrs do
   context 'instance authorized' do
     context 'single record' do
       it 'allows access to an authorized instance' do
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_jane.first_name }.to raise_error(access_error)
 
         patient_jane.allow_phi('test', 'unit tests') do
           expect { patient_jane.first_name }.not_to raise_error
         end
 
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_jane.first_name }.to raise_error(access_error)
 
         patient_jane.allow_phi! 'test', 'unit tests'
 
@@ -113,17 +114,17 @@ RSpec.describe PhiAttrs do
       it 'only allows access to the authorized instance' do
         patient_jane.allow_phi('test', 'unit tests') do
           expect { patient_jane.first_name }.not_to raise_error
-          expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+          expect { patient_john.first_name }.to raise_error(access_error)
         end
 
         patient_jane.allow_phi! 'test', 'unit tests'
 
         expect { patient_jane.first_name }.not_to raise_error
-        expect { patient_john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_john.first_name }.to raise_error(access_error)
       end
 
       it 'revokes access after calling disallow_phi!' do
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_jane.first_name }.to raise_error(access_error)
 
         patient_jane.allow_phi! 'test', 'unit tests'
 
@@ -131,18 +132,18 @@ RSpec.describe PhiAttrs do
 
         patient_jane.disallow_phi!
 
-        expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_jane.first_name }.to raise_error(access_error)
       end
 
       it 'allows access on an instance that already exists' do
         john = PatientInfo.create(first_name: 'John', last_name: 'Doe')
-        expect { john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { john.first_name }.to raise_error(access_error)
 
         john_id = john.id
         john = nil
 
         john = PatientInfo.find(john_id)
-        expect { john.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { john.first_name }.to raise_error(access_error)
 
         john.allow_phi! 'test', 'unit tests'
         expect { john.first_name }.not_to raise_error
@@ -158,7 +159,7 @@ RSpec.describe PhiAttrs do
 
       it 'allows access when fetched as a collection' do
         expect(patients).to contain_exactly(jay, bob, moe)
-        expect { patients.map(&:first_name) }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patients.map(&:first_name) }.to raise_error(access_error)
 
         patients.map { |p| p.allow_phi! 'test', 'unit tests' }
         expect { patients.map(&:first_name) }.not_to raise_error
@@ -169,7 +170,7 @@ RSpec.describe PhiAttrs do
 
         it 'allow_phi allows access to all members of a collection' do
           patients.each do |patient|
-            expect { patient.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+            expect { patient.first_name }.to raise_error(access_error)
           end
 
           expect {
@@ -180,11 +181,11 @@ RSpec.describe PhiAttrs do
         end
 
         it 'allow_phi does not allow access to non-targets' do
-          expect { non_target.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+          expect { non_target.first_name }.to raise_error(access_error)
 
           expect {
             PatientInfo.allow_phi('test', 'unit tests', allow_only: patients) do
-              expect { non_target.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+              expect { non_target.first_name }.to raise_error(access_error)
             end
           }.not_to raise_error
         end
@@ -214,7 +215,7 @@ RSpec.describe PhiAttrs do
 
   context 'class authorized' do
     it 'allows access to any instance' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_jane.first_name }.to raise_error(access_error)
       PatientInfo.allow_phi('test', 'unit tests') do
         expect { patient_jane.first_name }.not_to raise_error
       end
@@ -224,25 +225,25 @@ RSpec.describe PhiAttrs do
     end
 
     it 'only allows access to the authorized class' do
-      expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_detail.detail }.to raise_error(access_error)
+      expect { patient_jane.first_name }.to raise_error(access_error)
 
       PatientInfo.allow_phi('test', 'unit tests') do
         expect { patient_jane.first_name }.not_to raise_error
-        expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_detail.detail }.to raise_error(access_error)
       end
 
-      expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_detail.detail }.to raise_error(access_error)
+      expect { patient_jane.first_name }.to raise_error(access_error)
 
       PatientInfo.allow_phi! 'test', 'unit tests'
 
       expect { patient_jane.first_name }.not_to raise_error
-      expect { patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_detail.detail }.to raise_error(access_error)
     end
 
     it 'revokes access after calling disallow_phi!' do
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_jane.first_name }.to raise_error(access_error)
 
       PatientInfo.allow_phi! 'test', 'unit tests'
 
@@ -250,7 +251,7 @@ RSpec.describe PhiAttrs do
 
       PatientInfo.disallow_phi!
 
-      expect { patient_jane.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+      expect { patient_jane.first_name }.to raise_error(access_error)
     end
   end
 
@@ -261,8 +262,8 @@ RSpec.describe PhiAttrs do
 
     context 'plain access' do
       it 'extends access to extended association' do
-        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-        expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.first_name }.to raise_error(access_error)
+        expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
 
         patient_mary.allow_phi! 'test', 'unit tests'
 
@@ -272,12 +273,12 @@ RSpec.describe PhiAttrs do
       end
 
       it 'does not extend to unextended association' do
-        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-        expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.first_name }.to raise_error(access_error)
+        expect { patient_mary.address.address }.to raise_error(access_error)
 
         patient_mary.allow_phi! 'test', 'unit tests'
         expect { patient_mary.first_name }.not_to raise_error
-        expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.address.address }.to raise_error(access_error)
 
         patient_mary.address.allow_phi! 'test', 'unit test'
         expect { patient_mary.address.address }.not_to raise_error
@@ -287,8 +288,8 @@ RSpec.describe PhiAttrs do
 
     context 'block access' do
       it 'extends access to extended association' do
-        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-        expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.first_name }.to raise_error(access_error)
+        expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
 
         patient_mary.allow_phi('test', 'unit tests') do
           expect { patient_mary.first_name }.not_to raise_error
@@ -298,12 +299,12 @@ RSpec.describe PhiAttrs do
       end
 
       it 'does not extend to unextended association' do
-        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-        expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.first_name }.to raise_error(access_error)
+        expect { patient_mary.address.address }.to raise_error(access_error)
 
         patient_mary.allow_phi('test', 'unit tests') do
           expect { patient_mary.first_name }.not_to raise_error
-          expect { patient_mary.address.address }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+          expect { patient_mary.address.address }.to raise_error(access_error)
         end
 
         patient_mary.address.allow_phi! 'test', 'unit test'
@@ -317,9 +318,52 @@ RSpec.describe PhiAttrs do
           expect(patient_mary.patient_detail.detail).to eq('Lorem Ipsum')
         end
 
-        expect { patient_mary.first_name }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
-        expect { patient_mary.patient_detail.detail }.to raise_error(PhiAttrs::Exceptions::PhiAccessException)
+        expect { patient_mary.first_name }.to raise_error(access_error)
+        expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
       end
     end
   end
+
+  context 'nested allowances' do
+    context 'class level' do
+      it 'retains outer access when disallowed at inner level' do
+        PatientInfo.allow_phi('test', 'unit test one') do
+          expect { patient_with_detail.first_name }.not_to raise_error
+
+          PatientInfo.allow_phi('test', 'illegal phi harvesting') do
+            expect { patient_with_detail.first_name }.not_to raise_error
+          end # Inner permission revoked
+
+          expect { patient_with_detail.first_name }.not_to raise_error
+          expect { patient_with_detail.patient_detail.detail }.not_to raise_error
+        end # Outer permission revoked
+
+        expect { patient_with_detail.first_name }.to raise_error(access_error)
+        expect { patient_with_detail.patient_detail.detail }.to raise_error(access_error)
+      end
+    end
+
+    context 'instance level' do
+      it 'retains outer access when disallowed at inner level' do
+        patient_with_detail.allow_phi('test', 'unit test one') do
+          expect { patient_with_detail.first_name }.not_to raise_error
+
+          patient_with_detail.allow_phi('test', 'illegal phi harvesting') do
+            expect { patient_with_detail.first_name }.not_to raise_error
+          end # Inner permission revoked
+
+          expect { patient_with_detail.first_name }.not_to raise_error
+          expect { patient_with_detail.patient_detail.detail }.not_to raise_error
+        end # Outer permission revoked
+
+        expect { patient_with_detail.first_name }.to raise_error(access_error)
+        expect { patient_with_detail.patient_detail.detail }.to raise_error(access_error)
+      end
+    end
+
+  end
+end
+
+def access_error
+  PhiAttrs::Exceptions::PhiAccessException
 end

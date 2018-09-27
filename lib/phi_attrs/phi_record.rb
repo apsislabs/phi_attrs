@@ -15,13 +15,15 @@ module PhiAttrs
       class_attribute :__phi_include_methods
       class_attribute :__phi_extend_methods
       class_attribute :__phi_methods_wrapped
-      class_attribute :__phi_methods_extended
+      class_attribute :__phi_methods_to_extend
+      class_attribute :__phi_instances_extended
 
       after_initialize :wrap_phi
 
       # These have to default to an empty array
       self.__phi_methods_wrapped = []
-      self.__phi_methods_extended = []
+      self.__phi_methods_to_extend = []
+      self.__phi_instances_extended = Set.new
     end
 
     class_methods do
@@ -110,16 +112,26 @@ module PhiAttrs
 
         if allow_only.nil?
           allow_phi!(user_id, reason)
+
+          # Save this so we don't revoke access extended outside the block
+          instances = __phi_instances_extended.clone
         else
           allow_only.each { |t| t.allow_phi!(user_id, reason) }
         end
 
+
         yield if block_given?
+
 
         if allow_only.nil?
           disallow_phi!
+
+          new_extensions = __phi_instances_extended - instances
+          __revoke_extended_phi!(new_extensions)
         else
           allow_only.each { |t| t.disallow_phi! }
+          # Don't need to disallow extended instances here;
+          # they'll be taken care of by the instance-level `disallow` calls.
         end
       end
 
@@ -165,6 +177,19 @@ module PhiAttrs
       def __phi_stack
         RequestStore.store[:phi_access] ||= {}
         RequestStore.store[:phi_access][name] ||= []
+      end
+
+      # Revoke PHI access granted to other models as an extension of this class.
+      # Optionally, only revoke such access on the provided set of PhiRecords.
+      #
+      def __revoke_extended_phi!(instances = nil)
+        instances ||= self.__phi_instances_extended
+        instances.each do |relation|
+          if relation.present? && relation.class.included_modules.include?(PhiRecord)
+            relation.disallow_phi!
+          end
+        end
+        self.__phi_instances_extended.subtract(instances)
       end
     end
 
@@ -241,11 +266,7 @@ module PhiAttrs
     #
     def disallow_phi!
       PhiAttrs::Logger.tagged(*phi_log_keys) do
-        self.class.__phi_methods_extended.each do |method_name|
-          unwrapped_method = :"__#{method_name}_phi_access_original"
-          relation = send(unwrapped_method)
-          relation.disallow_phi! if relation.present? && relation.phi_allowed?
-        end
+        revoke_extended_phi!
 
         @__phi_access_stack.pop
 
@@ -275,10 +296,11 @@ module PhiAttrs
     def wrap_phi
       # Disable PHI access by default
       @__phi_access_stack = []
+      @__phi_methods_extended = Set.new
 
       # Wrap attributes with PHI Logger and Access Control
       __phi_wrapped_methods.each { |m| phi_wrap_method(m) }
-      __phi_extended_methods.each { |m| phi_extend_access(m) }
+      __phi_extended_methods.each { |m| phi_wrap_extension(m) }
     end
 
     # Log Key for an instance of this class. If the instance is persisted in the
@@ -396,18 +418,24 @@ module PhiAttrs
     #
     # @private
     #
-    def phi_extend_access(method_name)
-      return if self.class.__phi_methods_extended.include? method_name
+    def phi_wrap_extension(method_name)
+      return if self.class.__phi_methods_to_extend.include? method_name
 
-      wrapped_method = :"__#{method_name}_phi_access_extended"
-      unwrapped_method = :"__#{method_name}_phi_access_original"
+      wrapped_method = wrapped_extended_name(method_name)
+      unwrapped_method = unwrapped_extended_name(method_name)
 
       self.class.send(:define_method, wrapped_method) do |*args, &block|
-        # get the unwrapped relation
         relation = send(unwrapped_method, *args, &block)
 
-        if phi_allowed? && relation.class.included_modules.include?(PhiRecord)
-          relation.allow_phi!(phi_allowed_by, phi_access_reason) unless relation.phi_allowed?
+        if phi_allowed?
+          unless @__phi_methods_extended.include?(method_name)
+            if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+              relations = relation.is_a?(Enumerable) ? relation : [relation]
+              relations.each { |r| r.allow_phi!(phi_allowed_by, phi_access_reason) }
+              @__phi_methods_extended << method_name
+              self.class.__phi_instances_extended.merge(relations)
+            end
+          end
         end
 
         relation
@@ -417,7 +445,34 @@ module PhiAttrs
       self.class.send(:alias_method, unwrapped_method, method_name)
       self.class.send(:alias_method, method_name, wrapped_method)
 
-      self.class.__phi_methods_extended << method_name
+      self.class.__phi_methods_to_extend << method_name
+    end
+
+    # Revoke PHI access for all `extend`ed methods
+    def revoke_extended_phi!
+      @__phi_methods_extended.each do |method_name|
+        relation = send(unwrapped_extended_name(method_name))
+        if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+          relations = relation.is_a?(Enumerable) ? relation : [relation]
+          relations.each { |r| r.disallow_phi! }
+          self.class.__phi_instances_extended.subtract(relations)
+        end
+      end
+      @__phi_methods_extended.clear
+    end
+
+    def relation_klass(rel)
+      return rel.klass if rel.is_a?(ActiveRecord::Relation)
+      return rel.first.class if rel.is_a?(Enumerable)
+      return rel.class
+    end
+
+    def wrapped_extended_name(method_name)
+      :"__#{method_name}_phi_access_extended"
+    end
+
+    def unwrapped_extended_name(method_name)
+      :"__#{method_name}_phi_access_original"
     end
   end
 end

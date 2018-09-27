@@ -297,6 +297,7 @@ module PhiAttrs
       # Disable PHI access by default
       @__phi_access_stack = []
       @__phi_methods_extended = Set.new
+      @__phi_relations_extended = Set.new
 
       # Wrap attributes with PHI Logger and Access Control
       __phi_wrapped_methods.each { |m| phi_wrap_method(m) }
@@ -433,6 +434,7 @@ module PhiAttrs
               relations = relation.is_a?(Enumerable) ? relation : [relation]
               relations.each { |r| r.allow_phi!(phi_allowed_by, phi_access_reason) }
               @__phi_methods_extended << method_name
+              @__phi_relations_extended.merge(relations)
               self.class.__phi_instances_extended.merge(relations)
             end
           end
@@ -450,14 +452,13 @@ module PhiAttrs
 
     # Revoke PHI access for all `extend`ed methods
     def revoke_extended_phi!
-      @__phi_methods_extended.each do |method_name|
-        relation = send(unwrapped_extended_name(method_name))
+      @__phi_relations_extended.each do |relation|
         if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
-          relations = relation.is_a?(Enumerable) ? relation : [relation]
-          relations.each { |r| r.disallow_phi! }
-          self.class.__phi_instances_extended.subtract(relations)
+          relation.disallow_phi!
         end
       end
+      self.class.__phi_instances_extended.subtract(@__phi_relations_extended)
+      @__phi_relations_extended.clear
       @__phi_methods_extended.clear
     end
 

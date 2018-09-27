@@ -342,20 +342,52 @@ RSpec.describe PhiAttrs do
         expect { patient_mary.health_records.first.data }.to raise_error(access_error)
       end
 
-      it 'does not revoke access for untouched associations' do |t|
+      it 'does not revoke access for untouched associations (Class level)' do |t|
         # Here we extend access to two different associations.
-        # When the block terminates, it should revoke (one frame of) the `health_records` access,
+        # When the block terminates, it should revoke (the one frame of) the `health_records` access,
         # but it should NOT revoke (the only frame of) the `patient_detail` access.
+        # In either case, the "parent" object should still be able to re-extend access.
 
         PatientInfo.allow_phi!(FILENAME, t.full_description)
         expect { patient_mary.patient_detail.detail }.not_to raise_error
+        pd = patient_mary.patient_detail
 
         PatientInfo.allow_phi(FILENAME, t.full_description) do
           expect { patient_mary.health_records.first.data }.not_to raise_error
         end
 
+        # The PatientInfo should re-extend access to `health_records`
         expect { patient_mary.health_records.first.data }.not_to raise_error
+
+        # We should still be able to access this through a different handle,
+        # as the PatientDetail model should not have been affected by the end-of-block revocation.
+        # The separate handle is important because this does not allow the access to
+        # be quietly re-extended by the PatientInfo record.
+        expect { pd.detail }.not_to raise_error
+      end
+
+      it 'does not revoke access for untouched associations (instance level)' do |t|
+        # Here we extend access to two different associations.
+        # When the block terminates, it should revoke (the one frame of) the `health_records` access,
+        # but it should NOT revoke (the only frame of) the `patient_detail` access.
+        # In either case, the "parent" object should still be able to re-extend access.
+
+        patient_mary.allow_phi!(FILENAME, t.full_description)
         expect { patient_mary.patient_detail.detail }.not_to raise_error
+        pd = patient_mary.patient_detail
+
+        patient_mary.allow_phi(FILENAME, t.full_description) do
+          expect { patient_mary.health_records.first.data }.not_to raise_error
+        end
+
+        # The PatientInfo should re-extend access to `health_records`
+        expect { patient_mary.health_records.first.data }.not_to raise_error
+
+        # We should still be able to access this through a different handle,
+        # as the PatientDetail model should not have been affected by the end-of-block revocation.
+        # The separate handle is important because this does not allow the access to
+        # be quietly re-extended by the PatientInfo record.
+        expect { pd.detail }.not_to raise_error
       end
     end
   end

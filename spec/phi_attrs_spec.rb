@@ -260,8 +260,9 @@ RSpec.describe PhiAttrs do
   context 'extended authorization' do
     let(:mary_detail)  { PatientDetail.create(detail: 'Lorem Ipsum') }
     let(:mary_address) { Address.create(address: '123 Street Ave') }
-    let(:mary_records) { [HealthRecord.create(data: 'dolor sit amet'), HealthRecord.create(data: 'consectetur adipiscing elit')] }
-    let(:patient_mary) { PatientInfo.create(first_name: 'Mary', last_name: 'Jay', address: mary_address, patient_detail: mary_detail, health_records: mary_records) }
+    let(:mary_record_1) { HealthRecord.create(data: 'dolor sit amet') }
+    let(:mary_record_2) { HealthRecord.create(data: 'consectetur adipiscing elit') }
+    let(:patient_mary) { PatientInfo.create(first_name: 'Mary', last_name: 'Jay', address: mary_address, patient_detail: mary_detail, health_records: [mary_record_1, mary_record_2]) }
 
     context 'plain access' do
       it 'extends access to extended association' do |t|
@@ -325,7 +326,7 @@ RSpec.describe PhiAttrs do
       it 'extends access to :has_many associations' do |t|
         expect { patient_mary.health_records.first.data }.to raise_error(access_error)
 
-        patient_mary.allow_phi!(FILENAME, t.full_description) do
+        patient_mary.allow_phi(FILENAME, t.full_description) do
           expect { patient_mary.health_records.first.data }.not_to raise_error
         end
       end
@@ -339,6 +340,22 @@ RSpec.describe PhiAttrs do
         expect { patient_mary.first_name }.to raise_error(access_error)
         expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
         expect { patient_mary.health_records.first.data }.to raise_error(access_error)
+      end
+
+      it 'does not revoke access for untouched associations' do |t|
+        # Here we extend access to two different associations.
+        # When the block terminates, it should revoke (one frame of) the `health_records` access,
+        # but it should NOT revoke (the only frame of) the `patient_detail` access.
+
+        PatientInfo.allow_phi!(FILENAME, t.full_description)
+        expect { patient_mary.patient_detail.detail }.not_to raise_error
+
+        PatientInfo.allow_phi(FILENAME, t.full_description) do
+          expect { patient_mary.health_records.first.data }.not_to raise_error
+        end
+
+        expect { patient_mary.health_records.first.data }.not_to raise_error
+        expect { patient_mary.patient_detail.detail }.not_to raise_error
       end
     end
   end

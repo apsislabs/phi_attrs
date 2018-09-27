@@ -46,6 +46,16 @@ or a class:
 PatientInfo.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
 
+As of version `0.1.5`, a block syntax is available. As above, this is available on both class and instance levels. 
+
+Note the lack of a `!` at the end—these methods don't necessarily get along well with the mutating (bang) methods!
+
+```ruby
+PatientInfo.allow_phi('allowed_user@example.com', 'Display Customer Data') do
+  @data = PatientInfo.find(params[:id]).to_json
+end # Access no longer allowed beyond this point
+```
+
 ### Extending PHI Access
 
 Sometimes you'll have a single mental model that is composed of several `ActiveRecord` models joined by association. In this case, instead of calling `allow_phi!` on all joined models, we expose a shorthand of extending PHI access to related models.
@@ -68,7 +78,7 @@ patient.allow_phi!('user@example.com', 'reason')
 patient.patient_info.first_name
 ```
 
-**NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check.
+**NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check. There are no guaranteed safeguards against circular `extend_phi_access` calls!
 
 ## Development
 

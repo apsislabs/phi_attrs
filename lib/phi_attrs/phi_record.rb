@@ -144,6 +144,9 @@ module PhiAttrs
       # Explicitly disallow phi access in a specific area of code. This does not
       # play nicely with the mutating versions of `allow_phi!` and `disallow_phi!`
       #
+      # At the moment, this doesn't work at all, as the instance won't
+      # necessarily look at the class-level stack when determining if PHI is allowed.
+      #
       # &block [block] The block in which PHI access is explicitly disallowed.
       #
       # @example
@@ -159,6 +162,8 @@ module PhiAttrs
       #   end
       #   # PHI Access Allowed Again
       def disallow_phi
+        raise 'NotImplemented'
+
         __phi_stack.push({
           phi_access_allowed: false
         })

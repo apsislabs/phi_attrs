@@ -73,6 +73,8 @@ module PhiAttrs
       #   Foo.allow_phi!('user@example.com', 'viewing patient record')
       #
       def allow_phi!(user_id, reason)
+        raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
+
         self.__phi_stack.push({
           phi_access_allowed: true,
           user_id: user_id,
@@ -226,6 +228,8 @@ module PhiAttrs
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
     def allow_phi!(user_id, reason)
+      raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
+
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_stack.push({
           phi_access_allowed: true,

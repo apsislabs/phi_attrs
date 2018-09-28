@@ -184,19 +184,6 @@ module PhiAttrs
         RequestStore.store[:phi_access] ||= {}
         RequestStore.store[:phi_access][name] ||= []
       end
-
-      # Revoke PHI access granted to other models as an extension of this class.
-      # Optionally, only revoke such access on the provided set of PhiRecords.
-      #
-      def __revoke_extended_phi!(instances = nil)
-        instances ||= self.__instances_with_extended_phi
-        instances.each do |relation|
-          if relation.present? && relation.class.included_modules.include?(PhiRecord)
-            relation.disallow_phi!
-          end
-        end
-        self.__instances_with_extended_phi.subtract(instances)
-      end
     end
 
     # Get all method names to be wrapped with PHI access logging

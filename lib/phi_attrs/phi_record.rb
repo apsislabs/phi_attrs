@@ -234,7 +234,7 @@ module PhiAttrs
         @__phi_access_stack.push({
           phi_access_allowed: true,
           user_id: user_id,
-          access_reason: reason,
+          reason: reason,
         })
 
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")

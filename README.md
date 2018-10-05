@@ -126,3 +126,11 @@ The gem is available as open source under the terms of the [MIT License](https:/
 Apsis Labs, LLP is not a law firm and does not provide legal advice. The information in this repo and software does not constitute legal advice, nor does usage of this software create an attorney-client relationship.
 
 Apsis Labs, LLP is not a HIPAA covered entity, and usage of this software does not create a business associate relationship, nor does it enact a business associate agreement.
+
+---
+
+# Built by Apsis
+
+[![apsis](https://s3-us-west-2.amazonaws.com/apsiscdn/apsis.png)](https://www.apsis.io)
+
+`phi_attrs` was built by Apsis Labs. We love sharing what we build! Check out our [other libraries on Github](https://github.com/apsislabs), and if you like our work you can [hire us](https://www.apsis.io/work-with-us/) to build your vision.

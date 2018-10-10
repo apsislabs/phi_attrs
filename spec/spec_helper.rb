@@ -2,11 +2,12 @@ require 'simplecov'
 SimpleCov.start
 
 require 'bundler/setup'
+require 'factory_bot_rails'
+require 'faker'
 require 'phi_attrs'
 
 Bundler.require :default, :development
 Combustion.initialize! :all
-
 require 'rspec/rails'
 
 RSpec.configure do |config|
@@ -26,4 +27,7 @@ RSpec.configure do |config|
     RequestStore.end!
     RequestStore.clear!
   end
+
+  # So we don't have to prefix everything with `FactoryBot.`
+  config.include FactoryBot::Syntax::Methods
 end

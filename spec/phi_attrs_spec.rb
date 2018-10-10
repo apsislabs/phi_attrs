@@ -1,10 +1,10 @@
 FILENAME = __FILE__
 
 RSpec.describe PhiAttrs do
-  let(:patient_john) { PatientInfo.new(first_name: 'John', last_name: 'Doe') }
-  let(:patient_jane) { PatientInfo.new(first_name: 'Jane', last_name: 'Doe') }
-  let(:patient_detail) { PatientDetail.new(detail: 'Lorem Ipsum') }
-  let(:patient_with_detail) { PatientInfo.new(first_name: 'Jack', last_name: 'Doe', patient_detail: patient_detail)}
+  let(:patient_john) { build(:patient_info, :john) }
+  let(:patient_jane) { build(:patient_info, :jane) }
+  let(:patient_detail) { build(:patient_detail) }
+  let(:patient_with_detail) { build(:patient_info, :jack, patient_detail: patient_detail) }
 
   it 'has a version number' do
     expect(PhiAttrs::VERSION).not_to be nil

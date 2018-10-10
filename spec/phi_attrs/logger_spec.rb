@@ -1,3 +1,5 @@
+FILENAME = __FILE__
+
 RSpec.describe Logger do
   let(:patient_john) { build(:patient_info, :john) }
   let(:patient_jane) { build(:patient_info, :jane) }

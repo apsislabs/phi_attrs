@@ -45,23 +45,23 @@ RSpec.describe Logger do
         patient_jane.first_name
       end
     end
-    
-    context 'identifier' do
-        it 'object_id for unpersisted' do |t|
-          PatientInfo.allow_phi!(FILENAME, t.full_description)
-          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
-          expect(PhiAttrs::Logger.logger).to receive(:info)
-          patient_jane.first_name
-        end
 
-        it 'id for persisted' do |t|
-          PatientInfo.allow_phi!(FILENAME, t.full_description)
-          patient_jane.save
-          expect(patient_jane.persisted?).to be true
-          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
-          expect(PhiAttrs::Logger.logger).to receive(:info).and_call_original
-          patient_jane.first_name
-        end
+    context 'identifier' do
+      it 'object_id for unpersisted' do |t|
+        PatientInfo.allow_phi!(FILENAME, t.full_description)
+        expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
+        expect(PhiAttrs::Logger.logger).to receive(:info)
+        patient_jane.first_name
+      end
+
+      it 'id for persisted' do |t|
+        PatientInfo.allow_phi!(FILENAME, t.full_description)
+        patient_jane.save
+        expect(patient_jane.persisted?).to be true
+        expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
+        expect(PhiAttrs::Logger.logger).to receive(:info).and_call_original
+        patient_jane.first_name
+      end
     end
 
     context 'frequency' do
@@ -82,6 +82,6 @@ RSpec.describe Logger do
           end # Logged Disallowed
         end # Logged Disallowed
       end
-  end
+    end
   end
 end

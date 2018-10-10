@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module PhiAttrs
-  Format = "%s %5s: %s\n".freeze
+  FORMAT = "%s %5s: %s\n"
 
   # https://github.com/ruby/ruby/blob/trunk/lib/logger.rb#L587
   class Formatter < ::Logger::Formatter
-    def call(severity, timestamp, progname, msg)
-      Format % [format_datetime(timestamp), severity, msg2str(msg)]
+    def call(severity, timestamp, _progname, msg)
+      format(FORMAT, format_datetime(timestamp), severity, msg2str(msg))
     end
   end
 end

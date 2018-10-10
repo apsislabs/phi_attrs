@@ -1,6 +1,8 @@
+# frozen_string_literal: true
+
 # Namespace for classes and modules that handle PHI Attribute Access Logging
 module PhiAttrs
-  PHI_ACCESS_LOG_TAG = 'PHI Access Log'.freeze
+  PHI_ACCESS_LOG_TAG = 'PHI Access Log'
 
   # Module for extending ActiveRecord models to handle PHI access logging
   # and restrict access to attributes.
@@ -75,11 +77,11 @@ module PhiAttrs
       def allow_phi!(user_id, reason)
         raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
-        self.__phi_stack.push({
-          phi_access_allowed: true,
-          user_id: user_id,
-          reason: reason
-        })
+        __phi_stack.push({
+                           phi_access_allowed: true,
+                           user_id: user_id,
+                           reason: reason
+                         })
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
           PhiAttrs::Logger.info("PHI Access Enabled for #{user_id}: #{reason}")
@@ -113,7 +115,7 @@ module PhiAttrs
         end
 
         # Save this so we don't revoke access previously extended outside the block
-        frozen_instances = Hash[__instances_with_extended_phi.map{ |obj| [obj, obj.instance_variable_get(:@__phi_relations_extended).clone] }]
+        frozen_instances = Hash[__instances_with_extended_phi.map { |obj| [obj, obj.instance_variable_get(:@__phi_relations_extended).clone] }]
 
         if allow_only.nil?
           allow_phi!(user_id, reason)
@@ -165,8 +167,8 @@ module PhiAttrs
         raise 'NotImplemented'
 
         __phi_stack.push({
-          phi_access_allowed: false
-        })
+                           phi_access_allowed: false
+                         })
 
         yield if block_given?
 
@@ -224,15 +226,14 @@ module PhiAttrs
 
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_stack.push({
-          phi_access_allowed: true,
-          user_id: user_id,
-          reason: reason,
-        })
+                                   phi_access_allowed: true,
+                                   user_id: user_id,
+                                   reason: reason
+                                 })
 
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
       end
     end
-
 
     # Enable PHI access for a single instance of this class inside the block.
     # Nested calls to allow_phi will log once per nested call
@@ -286,7 +287,7 @@ module PhiAttrs
     # @return [Boolean] whether PHI access is allowed for this instance
     #
     def phi_allowed?
-      phi_context != nil && phi_context[:phi_access_allowed]
+      !phi_context.nil? && phi_context[:phi_access_allowed]
     end
 
     private
@@ -456,9 +457,7 @@ module PhiAttrs
     def revoke_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
-        if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
-          relation.disallow_phi!
-        end
+        relation.disallow_phi! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
       end
       @__phi_relations_extended.subtract(relations)
     end
@@ -466,6 +465,7 @@ module PhiAttrs
     def relation_klass(rel)
       return rel.klass if rel.is_a?(ActiveRecord::Relation)
       return rel.first.class if rel.is_a?(Enumerable)
+
       return rel.class
     end
 

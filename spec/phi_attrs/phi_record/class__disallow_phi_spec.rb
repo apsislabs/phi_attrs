@@ -1,5 +1,5 @@
+# frozen_string_literal: true
 
 RSpec.describe 'class disallow_phi' do
-  file_name = __FILE__
-
+  # TODO: Nothing here yet
 end

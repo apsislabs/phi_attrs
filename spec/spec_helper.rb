@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'simplecov'
 SimpleCov.start
 
@@ -11,7 +13,7 @@ Combustion.initialize! :all
 require 'rspec/rails'
 
 # Adds all support files
-Dir[File.join("#{Gem::Specification.find_by_name("phi_attrs").gem_dir}", 'spec', 'support', '**', '*.rb')].each { |f| require f }
+Dir[File.join(Gem::Specification.find_by_name('phi_attrs').gem_dir.to_s, 'spec', 'support', '**', '*.rb')].each { |f| require f }
 
 RSpec.configure do |config|
   config.use_transactional_fixtures = true

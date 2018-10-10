@@ -1,18 +1,20 @@
+# frozen_string_literal: true
+
 RSpec.describe Logger do
   file_name = __FILE__
 
-  let(:patient_john) { build(:patient_info, first_name: "John") }
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_john) { build(:patient_info, first_name: 'John') }
+  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
 
   context 'log' do
     context 'error' do
       it 'when raising an exception' do
-        patient_john # TODO Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
+        patient_john # TODO: Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
         expect(PhiAttrs::Logger.logger).to receive(:error).with('my error message')
 
-        expect {
+        expect do
           raise PhiAttrs::Exceptions::PhiAccessException, 'my error message'
-        }.to raise_error(access_error)
+        end.to raise_error(access_error)
       end
 
       it 'for unauthorized access' do
@@ -28,13 +30,13 @@ RSpec.describe Logger do
       end
 
       it 'when granting phi to class' do |t|
-        patient_john # TODO Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
+        patient_john # TODO: Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
         expect(PhiAttrs::Logger.logger).to receive(:info)
         PatientInfo.allow_phi!(file_name, t.full_description)
       end
 
       it 'when revokes phi to class' do
-        patient_john # TODO Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
+        patient_john # TODO: Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
         expect(PhiAttrs::Logger.logger).to receive(:info)
         PatientInfo.disallow_phi!
       end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module PhiAttrs
   module Configure
     @@log_path = nil

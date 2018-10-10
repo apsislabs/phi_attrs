@@ -1,6 +1,6 @@
+# frozen_string_literal: true
 
 RSpec.describe 'instance disallow_phi' do
-  file_name = __FILE__
   context 'block', skip: 'Not yet implemented' do
     it 'disables all allowances within the block' do |t|
       patient_john.allow_phi!(file_name, t.full_description)

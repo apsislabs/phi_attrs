@@ -1,9 +1,10 @@
+# frozen_string_literal: true
 
 RSpec.describe 'class allow_phi' do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
   let(:patient_detail) { build(:patient_detail) }
-  let(:patient_with_detail) { build(:patient_info, first_name: "Jack", patient_detail: patient_detail) }
+  let(:patient_with_detail) { build(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
 
   context 'authorized' do
     it 'allows access to any instance' do |t|
@@ -55,7 +56,7 @@ RSpec.describe 'class allow_phi' do
   end
 
   context 'extended authorization' do
-    let(:patient_mary) { create(:patient_info, :with_multiple_health_records)}
+    let(:patient_mary) { create(:patient_info, :with_multiple_health_records) }
 
     it 'does not revoke access for untouched associations' do |t|
       # Here we extend access to two different associations.

@@ -1,11 +1,12 @@
+# frozen_string_literal: true
 
 RSpec.describe 'instance allow_phi' do
   file_name = __FILE__
 
-  let(:patient_john) { build(:patient_info, first_name: "John") }
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_john) { build(:patient_info, first_name: 'John') }
+  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
   let(:patient_detail) { build(:patient_detail) }
-  let(:patient_with_detail) { build(:patient_info, first_name: "Jack", patient_detail: patient_detail) }
+  let(:patient_with_detail) { build(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
 
   context 'authorized' do
     context 'single record' do
@@ -71,9 +72,9 @@ RSpec.describe 'instance allow_phi' do
     end
 
     context 'collection' do
-      let(:jay) { create(:patient_info, first_name: "Jay") }
-      let(:bob) { create(:patient_info, first_name: "Bob") }
-      let(:moe) { create(:patient_info, first_name: "Moe") }
+      let(:jay) { create(:patient_info, first_name: 'Jay') }
+      let(:bob) { create(:patient_info, first_name: 'Bob') }
+      let(:moe) { create(:patient_info, first_name: 'Moe') }
       let(:patients) { [jay, bob, moe] }
 
       it 'allows access when fetched as a collection' do |t|
@@ -92,40 +93,40 @@ RSpec.describe 'instance allow_phi' do
             expect { patient.first_name }.to raise_error(access_error)
           end
 
-          expect {
+          expect do
             PatientInfo.allow_phi(file_name, t.full_description, allow_only: patients) do
-              expect(patients.map(&:first_name)).to contain_exactly("Jay", "Bob", "Moe")
+              expect(patients.map(&:first_name)).to contain_exactly('Jay', 'Bob', 'Moe')
             end
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         it 'allow_phi does not allow access to non-targets' do |t|
           expect { non_target.first_name }.to raise_error(access_error)
 
-          expect {
+          expect do
             PatientInfo.allow_phi(file_name, t.full_description, allow_only: patients) do
               expect { non_target.first_name }.to raise_error(access_error)
             end
-          }.not_to raise_error
+          end.not_to raise_error
         end
 
         context 'invalid targets' do
           it 'raises exception when targeting an unexpected class' do |t|
             address = create(:address)
 
-            expect {
+            expect do
               PatientInfo.allow_phi(file_name, t.full_description, allow_only: [jay, address]) do
                 jay.first_name
               end
-            }.to raise_error(ArgumentError)
+            end.to raise_error(ArgumentError)
           end
 
           it 'raises exception when given a non-iterable' do |t|
-            expect {
+            expect do
               PatientInfo.allow_phi(file_name, t.full_description, allow_only: jay) do
                 jay.first_name
               end
-            }.to raise_error(ArgumentError)
+            end.to raise_error(ArgumentError)
           end
         end
       end
@@ -133,7 +134,7 @@ RSpec.describe 'instance allow_phi' do
   end
 
   context 'extended authorization' do
-    let(:patient_mary) { create(:patient_info, :with_multiple_health_records)}
+    let(:patient_mary) { create(:patient_info, :with_multiple_health_records) }
 
     context 'plain access' do
       it 'extends access to extended association' do |t|

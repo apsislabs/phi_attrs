@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 RSpec.describe 'exceptions' do
-  file_name = __FILE__
-  let(:patient_john) { build(:patient_info, first_name: "John") }
+  let(:patient_john) { build(:patient_info, first_name: 'John') }
 
   context 'unauthorized' do
     it 'raises an error on default attribute' do

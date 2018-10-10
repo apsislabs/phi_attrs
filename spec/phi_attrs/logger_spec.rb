@@ -1,8 +1,8 @@
 FILENAME = __FILE__
 
 RSpec.describe Logger do
-  let(:patient_john) { build(:patient_info, :john) }
-  let(:patient_jane) { build(:patient_info, :jane) }
+  let(:patient_john) { build(:patient_info, first_name: "John") }
+  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
 
   context 'log' do
     context 'error' do

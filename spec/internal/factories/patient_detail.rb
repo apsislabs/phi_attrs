@@ -2,6 +2,10 @@
 
 FactoryBot.define do
   factory :patient_detail do
-    detail { 'Lorem Ipsum' }
+    detail { 'Generic Spell' }
+
+    trait :all_random do
+      detail { Faker::HarryPotter.spell }
+    end
   end
 end

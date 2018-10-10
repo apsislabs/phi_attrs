@@ -1,10 +1,10 @@
 FILENAME = __FILE__
 
 RSpec.describe PhiAttrs do
-  let(:patient_john) { build(:patient_info, :john) }
-  let(:patient_jane) { build(:patient_info, :jane) }
+  let(:patient_john) { build(:patient_info, first_name: "John") }
+  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
   let(:patient_detail) { build(:patient_detail) }
-  let(:patient_with_detail) { build(:patient_info, :jack, patient_detail: patient_detail) }
+  let(:patient_with_detail) { build(:patient_info, first_name: "Jack", patient_detail: patient_detail) }
 
   context 'unauthorized' do
     it 'raises an error on default attribute' do
@@ -61,7 +61,7 @@ RSpec.describe PhiAttrs do
       end
 
       it 'allows access on an instance that already exists' do |t|
-        john = PatientInfo.create(first_name: 'John', last_name: 'Doe')
+        john = create(:patient_info, first_name: 'John')
         expect { john.first_name }.to raise_error(access_error)
 
         john_id = john.id
@@ -84,9 +84,9 @@ RSpec.describe PhiAttrs do
     end
 
     context 'collection' do
-      let(:jay) { PatientInfo.create(first_name: "Jay") }
-      let(:bob) { PatientInfo.create(first_name: "Bob") }
-      let(:moe) { PatientInfo.create(first_name: "Moe") }
+      let(:jay) { create(:patient_info, first_name: "Jay") }
+      let(:bob) { create(:patient_info, first_name: "Bob") }
+      let(:moe) { create(:patient_info, first_name: "Moe") }
       let(:patients) { [jay, bob, moe] }
 
       it 'allows access when fetched as a collection' do |t|
@@ -98,7 +98,7 @@ RSpec.describe PhiAttrs do
       end
 
       context 'with targets' do
-        let(:non_target) { PatientInfo.create(first_name: 'Private') }
+        let(:non_target) { create(:patient_info, first_name: 'Private') }
 
         it 'allow_phi allows access to all members of a collection' do |t|
           patients.each do |patient|
@@ -124,7 +124,7 @@ RSpec.describe PhiAttrs do
 
         context 'invalid targets' do
           it 'raises exception when targeting an unexpected class' do |t|
-            address = Address.create
+            address = create(:address)
 
             expect {
               PatientInfo.allow_phi(FILENAME, t.full_description, allow_only: [jay, address]) do
@@ -195,11 +195,7 @@ RSpec.describe PhiAttrs do
   end
 
   context 'extended authorization' do
-    let(:mary_detail)  { PatientDetail.create(detail: 'Lorem Ipsum') }
-    let(:mary_address) { Address.create(address: '123 Street Ave') }
-    let(:mary_record_1) { HealthRecord.create(data: 'dolor sit amet') }
-    let(:mary_record_2) { HealthRecord.create(data: 'consectetur adipiscing elit') }
-    let(:patient_mary) { PatientInfo.create(first_name: 'Mary', last_name: 'Jay', address: mary_address, patient_detail: mary_detail, health_records: [mary_record_1, mary_record_2]) }
+    let(:patient_mary) { create(:patient_info, :with_multiple_health_records)}
 
     context 'plain access' do
       it 'extends access to extended association' do |t|
@@ -210,7 +206,7 @@ RSpec.describe PhiAttrs do
 
         expect { patient_mary.first_name }.not_to raise_error
         expect { patient_mary.patient_detail.detail }.not_to raise_error
-        expect(patient_mary.patient_detail.detail).to eq 'Lorem Ipsum'
+        expect(patient_mary.patient_detail.detail).to eq 'Generic Spell'
       end
 
       it 'does not extend to unextended association' do |t|
@@ -223,7 +219,7 @@ RSpec.describe PhiAttrs do
 
         patient_mary.address.allow_phi!(FILENAME, t.full_description)
         expect { patient_mary.address.address }.not_to raise_error
-        expect(patient_mary.address.address).to eq '123 Street Ave'
+        expect(patient_mary.address.address).to eq '123 Little Whinging'
       end
 
       it 'extends access to :has_many associations' do |t|
@@ -242,7 +238,7 @@ RSpec.describe PhiAttrs do
         patient_mary.allow_phi(FILENAME, t.full_description) do
           expect { patient_mary.first_name }.not_to raise_error
           expect { patient_mary.patient_detail.detail }.not_to raise_error
-          expect(patient_mary.patient_detail.detail).to eq('Lorem Ipsum')
+          expect(patient_mary.patient_detail.detail).to eq('Generic Spell')
         end
       end
 
@@ -257,7 +253,7 @@ RSpec.describe PhiAttrs do
 
         patient_mary.address.allow_phi!(FILENAME, t.full_description)
         expect { patient_mary.address.address }.not_to raise_error
-        expect(patient_mary.address.address).to eq('123 Street Ave')
+        expect(patient_mary.address.address).to eq('123 Little Whinging')
       end
 
       it 'extends access to :has_many associations' do |t|
@@ -271,7 +267,7 @@ RSpec.describe PhiAttrs do
       it 'revokes access after block' do |t|
         patient_mary.allow_phi(FILENAME, t.full_description) do
           expect { patient_mary.patient_detail.detail }.not_to raise_error
-          expect(patient_mary.patient_detail.detail).to eq('Lorem Ipsum')
+          expect(patient_mary.patient_detail.detail).to eq('Generic Spell')
         end
 
         expect { patient_mary.first_name }.to raise_error(access_error)

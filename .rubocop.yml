@@ -1,0 +1,56 @@
+Rails:
+  Enabled: true
+
+AllCops:
+  Exclude:
+    - 'bin/**/*'
+    - 'spec/internal/db/schema.rb'
+  TargetRubyVersion: 2.5
+
+Documentation:
+  Enabled: false
+
+Metrics/AbcSize:
+  Max: 30
+  Exclude:
+    - 'spec/internal/db/**/*'
+
+Metrics/LineLength:
+  Exclude:
+    - 'spec/**/*'
+  Max: 140
+
+Metrics/MethodLength:
+  Exclude:
+    - 'spec/**/*'
+  Max: 20
+
+Metrics/ClassLength:
+  Max: 1500
+
+Metrics/BlockLength:
+  Enabled: false
+
+Layout/IndentationWidth:
+  Enabled: true
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+Style/ConditionalAssignment:
+  Enabled: false
+
+Style/RedundantReturn:
+  Enabled: false
+
+Style/WordArray:
+  MinSize: 4
+
+Style/SymbolArray:
+  EnforcedStyle: brackets
+
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+Naming/PredicateName:
+  Enabled: false

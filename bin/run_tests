@@ -2,6 +2,15 @@
 source bin/helpers/docker
 runOnDocker rails
 
+echo "== Starting rubocop =="
+bundle exec rubocop --format worst --format simple --format offenses
+if [ $? -ne 0 ]; then
+    echo -e "\n== Rubocop failed; push aborted! ==\n"
+    echo -e "To auto-correct errors run:"
+    echo -e "\tbin/rubo_fix"
+    exit 1
+fi
+
 echo "== Starting unit tests =="
 bundle exec appraisal rspec
 if [ $? -ne 0 ]; then

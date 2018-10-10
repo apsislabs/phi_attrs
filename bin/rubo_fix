@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+source bin/helpers/docker
+runOnDocker rails
+
+echo "== Starting rubocop =="
+bundle exec rubocop --format worst --format simple --format offenses --auto-correct

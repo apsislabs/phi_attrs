@@ -3,7 +3,7 @@ source bin/helpers/docker
 runOnDocker rails
 
 echo "== Starting unit tests =="
-bundle exec appraisal rspec spec/phi_attrs_spec.rb
+bundle exec appraisal rspec
 if [ $? -ne 0 ]; then
     echo -e "\n== RSpec failed; push aborted! ==\n"
     exit 1

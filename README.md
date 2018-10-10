@@ -111,7 +111,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Testing
 
-    $ bundle exec appraisal rspec spec/phi_attrs_spec.rb
+    $ bundle exec appraisal rspec
     or
     $ bin/run_tests
 

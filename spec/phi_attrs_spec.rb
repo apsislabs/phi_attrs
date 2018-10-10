@@ -466,7 +466,3 @@ RSpec.describe PhiAttrs do
     end
   end
 end
-
-def access_error
-  PhiAttrs::Exceptions::PhiAccessException
-end

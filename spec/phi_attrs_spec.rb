@@ -6,10 +6,6 @@ RSpec.describe PhiAttrs do
   let(:patient_detail) { build(:patient_detail) }
   let(:patient_with_detail) { build(:patient_info, :jack, patient_detail: patient_detail) }
 
-  it 'has a version number' do
-    expect(PhiAttrs::VERSION).not_to be nil
-  end
-
   context 'unauthorized' do
     it 'raises an error on default attribute' do
       expect { patient_john.first_name }.to raise_error(access_error)

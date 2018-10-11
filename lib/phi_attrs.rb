@@ -15,11 +15,6 @@ require 'phi_attrs/phi_record'
 module PhiAttrs
   def phi_model(with: nil, except: nil)
     include PhiRecord
-    logger = ActiveSupport::Logger.new(PhiAttrs.log_path)
-    logger.formatter = Formatter.new
-    file_logger = ActiveSupport::TaggedLogging.new(logger)
-
-    PhiAttrs::Logger.logger = file_logger
   end
 
   @@log_path = nil

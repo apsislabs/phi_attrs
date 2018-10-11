@@ -3,23 +3,22 @@
 RSpec.describe Logger do
   file_name = __FILE__
 
-  let(:patient_john) { build(:patient_info, first_name: 'John') }
   let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
 
   context 'log' do
     context 'error' do
       it 'when raising an exception' do
-        patient_john # TODO: Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
-        expect(PhiAttrs::Logger.logger).to receive(:error).with('my error message')
+        message = 'my error message'
+        expect(PhiAttrs::Logger.logger).to receive(:error).with(message)
 
         expect do
-          raise PhiAttrs::Exceptions::PhiAccessException, 'my error message'
+          raise PhiAttrs::Exceptions::PhiAccessException, message
         end.to raise_error(access_error)
       end
 
       it 'for unauthorized access' do
         expect(PhiAttrs::Logger.logger).to receive(:error)
-        expect { patient_john.birthday }.to raise_error(access_error)
+        expect { patient_jane.birthday }.to raise_error(access_error)
       end
     end
 
@@ -30,13 +29,11 @@ RSpec.describe Logger do
       end
 
       it 'when granting phi to class' do |t|
-        patient_john # TODO: Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
         expect(PhiAttrs::Logger.logger).to receive(:info)
         PatientInfo.allow_phi!(file_name, t.full_description)
       end
 
       it 'when revokes phi to class' do
-        patient_john # TODO: Clean up: Logger.logger isn't defined unless we load something tagged with phi_attrs
         expect(PhiAttrs::Logger.logger).to receive(:info)
         PatientInfo.disallow_phi!
       end
@@ -49,20 +46,40 @@ RSpec.describe Logger do
     end
 
     context 'identifier' do
-      it 'object_id for unpersisted' do |t|
-        PatientInfo.allow_phi!(file_name, t.full_description)
-        expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
-        expect(PhiAttrs::Logger.logger).to receive(:info)
-        patient_jane.first_name
+      context 'allowed' do
+        it 'object_id for unpersisted' do |t|
+          PatientInfo.allow_phi!(file_name, t.full_description)
+          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
+          expect(PhiAttrs::Logger.logger).to receive(:info)
+          patient_jane.first_name
+        end
+
+        it 'id for persisted' do |t|
+          PatientInfo.allow_phi!(file_name, t.full_description)
+          patient_jane.save
+          expect(patient_jane.persisted?).to be true
+          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
+          expect(PhiAttrs::Logger.logger).to receive(:info)
+          patient_jane.first_name
+        end
       end
 
-      it 'id for persisted' do |t|
-        PatientInfo.allow_phi!(file_name, t.full_description)
-        patient_jane.save
-        expect(patient_jane.persisted?).to be true
-        expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
-        expect(PhiAttrs::Logger.logger).to receive(:info).and_call_original
-        patient_jane.first_name
+      context 'unauthorized' do
+        it 'object_id for unpersisted' do
+          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
+          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::Exceptions::PhiAccessException::TAG).and_call_original
+          expect(PhiAttrs::Logger.logger).to receive(:error)
+          expect { patient_jane.first_name }.to raise_error(access_error)
+        end
+
+        it 'id for persisted' do
+          patient_jane.save
+          # expect(patient_jane.persisted?).to be true
+          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
+          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::Exceptions::PhiAccessException::TAG).and_call_original
+          expect(PhiAttrs::Logger.logger).to receive(:error)
+          expect { patient_jane.first_name }.to raise_error(access_error)
+        end
       end
     end
 

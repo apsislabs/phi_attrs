@@ -98,6 +98,16 @@ patient.patient_info.first_name
 
 **NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check. There are no guaranteed safeguards against circular `extend_phi_access` calls!
 
+### Manual PHI Access Logging
+
+If you aren't using `phi_record` you can still use `phi_attrs` to manually log phi access in your application. Where ever you are granting PHI access call:
+
+```ruby
+user = 'user@example.com'
+message = 'accessed list of all patients'
+PhiAttrs.log_phi_access(user, message)
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

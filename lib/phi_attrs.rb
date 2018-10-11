@@ -30,4 +30,10 @@ module PhiAttrs
   def self.log_path=(value)
     @@log_path = value
   end
+
+  def self.log_phi_access(user, message)
+    PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, user) do
+      PhiAttrs::Logger.info(message)
+    end
+  end
 end

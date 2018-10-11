@@ -81,6 +81,14 @@ RSpec.describe Logger do
           expect { patient_jane.first_name }.to raise_error(access_error)
         end
       end
+
+      it 'user for manual' do
+        user = 'Test User'
+        message = 'Access Granted Message'
+        expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, user).and_call_original
+        expect(PhiAttrs::Logger.logger).to receive(:info).with(message)
+        PhiAttrs.log_phi_access(user, message)
+      end
     end
 
     context 'frequency' do

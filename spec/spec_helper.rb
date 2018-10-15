@@ -1,13 +1,19 @@
+# frozen_string_literal: true
+
 require 'simplecov'
 SimpleCov.start
 
 require 'bundler/setup'
+require 'factory_bot_rails'
+require 'faker'
 require 'phi_attrs'
 
 Bundler.require :default, :development
 Combustion.initialize! :all
-
 require 'rspec/rails'
+
+# Adds all support files
+Dir[File.join(Gem::Specification.find_by_name('phi_attrs').gem_dir.to_s, 'spec', 'support', '**', '*.rb')].each { |f| require f }
 
 RSpec.configure do |config|
   config.use_transactional_fixtures = true
@@ -26,4 +32,7 @@ RSpec.configure do |config|
     RequestStore.end!
     RequestStore.clear!
   end
+
+  # So we don't have to prefix everything with `FactoryBot.`
+  config.include FactoryBot::Syntax::Methods
 end

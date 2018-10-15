@@ -64,7 +64,7 @@ or a class:
 PatientInfo.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
 
-As of version `0.1.5`, a block syntax is available. As above, this is available on both class and instance levels. 
+As of version `0.1.5`, a block syntax is available. As above, this is available on both class and instance levels.
 
 Note the lack of a `!` at the end—these methods don't necessarily get along well with the mutating (bang) methods!
 
@@ -106,12 +106,14 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ### Docker
 
--   `docker-compose up`
--   `bin/ssh_to_container`
+    $ docker-compose up
+    $ bin/ssh_to_container
 
 ## Testing
 
-    $ bundle exec appraisal rspec spec/phi_attrs_spec.rb
+    $ bundle exec appraisal rspec
+    or
+    $ bin/run_tests
 
 ## Contributing
 

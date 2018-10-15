@@ -11,6 +11,7 @@ services:
       - BUNDLE_PATH=/bundle
       - BUNDLE_BIN=/bundle/bin
       - GEM_HOME=/bundle
+      - DOCKER_CONTAINER=1
     command:
       - docker/start.sh
 

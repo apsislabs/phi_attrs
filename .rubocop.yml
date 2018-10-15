@@ -1,0 +1,90 @@
+Rails:
+  Enabled: true
+
+AllCops:
+  Exclude:
+    - 'bin/**/*'
+    - 'spec/internal/db/schema.rb'
+  TargetRubyVersion: 2.5
+
+Documentation:
+  Enabled: false
+
+Layout/IndentationWidth:
+  Enabled: true
+
+Lint/UnreachableCode:
+  Exclude:
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Lint/UnusedMethodArgument:
+  Exclude:
+    - 'lib/phi_attrs.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Metrics/AbcSize:
+  Max: 30
+  Exclude:
+    - 'spec/internal/db/**/*'
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Max: 1500
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+   - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Metrics/LineLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+  Max: 140
+
+Metrics/MethodLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+  Max: 20
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Naming/PredicateName:
+  Enabled: false
+
+Rails/DynamicFindBy:
+  Exclude:
+    - 'spec/spec_helper.rb' # TODO: RUBOCOP Cleanup exclusion
+
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+Style/ClassVars:
+  Enabled: false
+
+Style/CommentedKeyword:
+  Exclude:
+    - 'spec/**/*'
+
+Style/ConditionalAssignment:
+  Enabled: false
+
+Style/EmptyMethod:
+  EnforcedStyle: expanded
+
+Style/SymbolArray:
+  EnforcedStyle: brackets
+
+Style/RedundantReturn:
+  Enabled: false
+
+Style/WordArray:
+  MinSize: 4

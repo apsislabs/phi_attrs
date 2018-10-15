@@ -1,4 +1,6 @@
-class PatientInfo < ActiveRecord::Base
+# frozen_string_literal: true
+
+class PatientInfo < ApplicationRecord
   has_one :patient_detail, inverse_of: 'patient_info'
   has_one :address, inverse_of: 'patient_info'
   has_many :health_records, inverse_of: 'patient_info'

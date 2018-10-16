@@ -2,8 +2,6 @@
 
 # Namespace for classes and modules that handle PHI Attribute Access Logging
 module PhiAttrs
-  PHI_ACCESS_LOG_TAG = 'PHI Access Log'
-
   # Module for extending ActiveRecord models to handle PHI access logging
   # and restrict access to attributes.
   #

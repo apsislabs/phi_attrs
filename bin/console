@@ -13,4 +13,8 @@ require 'phi_attrs'
 require 'irb'
 require 'irb/completion'
 
+PhiAttrs.configure do |conf|
+  conf.log_path = File.join('log', 'phi_access_console.log')
+end
+
 IRB.start(__FILE__)

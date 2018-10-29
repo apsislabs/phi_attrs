@@ -82,7 +82,7 @@ module PhiAttrs
                          })
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
-          PhiAttrs::Logger.info("PHI Access Enabled for #{user_id}: #{reason}")
+          PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}: #{reason}'")
         end
       end
 

@@ -179,9 +179,11 @@ module PhiAttrs
       #   Foo.disallow_phi!
       #
       def disallow_phi!
-        __phi_stack.pop
+        removed_access = __phi_stack.pop
+        message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
+
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
-          PhiAttrs::Logger.info('PHI access disabled') # TODO: Log which frame
+          PhiAttrs::Logger.info(message)
         end
       end
 
@@ -268,11 +270,11 @@ module PhiAttrs
     #
     def disallow_phi!(preserve_extensions: false)
       PhiAttrs::Logger.tagged(*phi_log_keys) do
-        @__phi_access_stack.pop
+        removed_access = @__phi_access_stack.pop
 
         revoke_extended_phi! unless preserve_extensions
-
-        PhiAttrs::Logger.info('PHI access disabled')
+        message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No instance level access was granted.'
+        PhiAttrs::Logger.info(message)
       end
     end
 

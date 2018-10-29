@@ -33,9 +33,26 @@ RSpec.describe Logger do
         PatientInfo.allow_phi!(file_name, t.full_description)
       end
 
-      it 'when revokes phi to class' do
-        expect(PhiAttrs::Logger.logger).to receive(:info)
+      it 'when revokes phi to class, no current access' do
+        expect(PhiAttrs::Logger.logger).to receive(:info).with(/No class level/)
         PatientInfo.disallow_phi!
+      end
+
+      it 'when revokes phi to instance, no current access' do
+        expect(PhiAttrs::Logger.logger).to receive(:info).with(/No instance level/)
+        patient_jane.disallow_phi!
+      end
+
+      it 'when revokes phi to class, with current access' do |t|
+        PatientInfo.allow_phi!(file_name, t.full_description)
+        expect(PhiAttrs::Logger.logger).to receive(:info).with(Regexp.new(file_name))
+        PatientInfo.disallow_phi!
+      end
+
+      it 'when revokes phi to instance, with current access' do |t|
+        patient_jane.allow_phi!(file_name, t.full_description)
+        expect(PhiAttrs::Logger.logger).to receive(:info).with(Regexp.new(file_name))
+        patient_jane.disallow_phi!
       end
 
       it 'when accessing method' do |t|

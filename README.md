@@ -63,12 +63,14 @@ class PatientInfo < ActiveRecord::Base
 end
 ```
 
-Access is granted on a model level:
+Access is granted on a instance level:
 
 ```ruby
 info = PatientInfo.new
 info.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
+
+*When using on an instance if you find it in a second place you will need to call allow_phi! again.*
 
 or a class:
 

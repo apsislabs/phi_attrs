@@ -78,13 +78,23 @@ PatientInfo.allow_phi!("allowed_user@example.com", "Customer Service")
 
 As of version `0.1.5`, a block syntax is available. As above, this is available on both class and instance levels.
 
-Note the lack of a `!` at the end. These methods don't necessarily get along well with the mutating (bang) methods!
+Note the lack of a `!` at the end. These methods should not be used alongside the mutating (bang) methods! We recommend using the block syntax for tighter control.
+
+```ruby
+patient = PatientInfo.find(params[:id])
+patient.allow_phi('allowed_user@example.com', 'Display Customer Data') do
+  @data = patient.to_json
+end # Access no longer allowed beyond this point
+```
+
+or a block on a class:
 
 ```ruby
 PatientInfo.allow_phi('allowed_user@example.com', 'Display Customer Data') do
   @data = PatientInfo.find(params[:id]).to_json
 end # Access no longer allowed beyond this point
 ```
+
 ### Controlling What is PHI
 
 When you include `phi_model` on your active record all fields except the id will be considered PHI.

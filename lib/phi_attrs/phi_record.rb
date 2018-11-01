@@ -424,7 +424,6 @@ module PhiAttrs
 
           unless all_phi_context_logged?
             PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
-            # phi_context[:logged] = true
             set_all_phi_context_logged
           end
 

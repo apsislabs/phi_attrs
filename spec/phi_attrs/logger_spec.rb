@@ -128,7 +128,7 @@ RSpec.describe Logger do
       end
 
       it 'multiple times for nested allows and disallows' do |t|
-        PatientInfo.allow_phi!(file_name + + '1', t.full_description)
+        PatientInfo.allow_phi!(file_name + '1', t.full_description)
         PatientInfo.allow_phi!(file_name + '2', t.full_description)
         PatientInfo.allow_phi!(file_name + '3', t.full_description)
 

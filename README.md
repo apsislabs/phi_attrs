@@ -127,6 +127,52 @@ class PatientInfo < ActiveRecord::Base
 end
 ```
 
+#### Example Usage
+
+Example of `exclude_from_phi` and `include_in_phi` with inheritance.
+
+```ruby
+class PatientInfo < ActiveRecord::Base
+  phi_model
+end
+
+pi = PatientInfo.new(first_name: "Ash", last_name: "Ketchum")
+pi.created_at
+# PHIAccessException!
+pi.last_name
+# PHIAccessException!
+pi.allow_phi "Ash", "Testing PHI Attrs" { pi.last_name }
+# "Ketchum"
+```
+
+```ruby
+class PatientInfoTwo < PatientInfo
+  exclude_from_phi :created_at
+end
+
+pi = PatientInfoTwo.new(first_name: "Ash", last_name: "Ketchum")
+pi.created_at
+# current time
+pi.last_name
+# PHIAccessException!
+pi.allow_phi "Ash", "Testing PHI Attrs" { pi.last_name }
+# "Ketchum"
+```
+
+```ruby
+class PatientInfoThree < PatientInfoTwo
+  include_in_phi :created_at # Changed our mind
+end
+
+pi = PatientInfoThree.new(first_name: "Ash", last_name: "Ketchum")
+pi.created_at
+# PHIAccessException!
+pi.last_name
+# PHIAccessException!
+pi.allow_phi "Ash", "Testing PHI Attrs" { pi.last_name }
+# "Ketchum"
+```
+
 ### Extending PHI Access
 
 Sometimes you'll have a single mental model that is composed of several `ActiveRecord` models joined by association. In this case, instead of calling `allow_phi!` on all joined models, we expose a shorthand of extending PHI access to related models.

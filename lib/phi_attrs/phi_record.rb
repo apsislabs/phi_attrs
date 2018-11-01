@@ -260,8 +260,6 @@ module PhiAttrs
 
     # Revoke PHI access for a single instance of this class.
     #
-    # @yield   The block in which phi access is explicitly disallowed
-    #
     # @example
     #   foo = Foo.find(1)
     #   foo.disallow_phi!

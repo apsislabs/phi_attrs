@@ -36,6 +36,18 @@ Or install it yourself as:
 
     $ gem install phi_attrs
 
+## Initialize
+
+Create an initializer to configure the PHI log file location. Example:
+
+ `config/initializers/phi_attrs.rb`
+
+```ruby
+PhiAttrs.configure do |conf|
+  conf.log_path = Rails.root.join("log", "phi_access_#{Rails.env}.log")
+end
+```
+
 ## Usage
 
 ```ruby
@@ -51,12 +63,14 @@ class PatientInfo < ActiveRecord::Base
 end
 ```
 
-Access is granted on a model level:
+Access is granted on a instance level:
 
 ```ruby
 info = PatientInfo.new
 info.allow_phi!("allowed_user@example.com", "Customer Service")
 ```
+
+*When using on an instance if you find it in a second place you will need to call allow_phi! again.*
 
 or a class:
 
@@ -66,12 +80,99 @@ PatientInfo.allow_phi!("allowed_user@example.com", "Customer Service")
 
 As of version `0.1.5`, a block syntax is available. As above, this is available on both class and instance levels.
 
-Note the lack of a `!` at the end—these methods don't necessarily get along well with the mutating (bang) methods!
+Note the lack of a `!` at the end. These methods should not be used alongside the mutating (bang) methods! We recommend using the block syntax for tighter control.
+
+```ruby
+patient = PatientInfo.find(params[:id])
+patient.allow_phi('allowed_user@example.com', 'Display Customer Data') do
+  @data = patient.to_json
+end # Access no longer allowed beyond this point
+```
+
+or a block on a class:
 
 ```ruby
 PatientInfo.allow_phi('allowed_user@example.com', 'Display Customer Data') do
   @data = PatientInfo.find(params[:id]).to_json
 end # Access no longer allowed beyond this point
+```
+
+### Controlling What is PHI
+
+When you include `phi_model` on your active record all fields except the id will be considered PHI.
+
+To remove fields from PHI tracking use `exclude_from_phi`:
+
+```ruby
+# created_at and updated_at will be accessible as normal
+class PatientInfo < ActiveRecord::Base
+  phi_model
+
+  exclude_from_phi :created_at, :updated_at
+end
+```
+
+To add a method as PHI use `include_in_phi`. Include takes precedence over exclude so a method that appears in both will be considered PHI.
+
+```ruby
+# birthday and node will throw PHIExceptions if accessed without permission
+class PatientInfo < ActiveRecord::Base
+  phi_model
+
+  include_in_phi :birthday, :note
+
+  def birthday
+    Time.current
+  end
+
+  attr_accessor :note
+end
+```
+
+#### Example Usage
+
+Example of `exclude_from_phi` and `include_in_phi` with inheritance.
+
+```ruby
+class PatientInfo < ActiveRecord::Base
+  phi_model
+end
+
+pi = PatientInfo.new(first_name: "Ash", last_name: "Ketchum")
+pi.created_at
+# PHIAccessException!
+pi.last_name
+# PHIAccessException!
+pi.allow_phi "Ash", "Testing PHI Attrs" { pi.last_name }
+# "Ketchum"
+```
+
+```ruby
+class PatientInfoTwo < PatientInfo
+  exclude_from_phi :created_at
+end
+
+pi = PatientInfoTwo.new(first_name: "Ash", last_name: "Ketchum")
+pi.created_at
+# current time
+pi.last_name
+# PHIAccessException!
+pi.allow_phi "Ash", "Testing PHI Attrs" { pi.last_name }
+# "Ketchum"
+```
+
+```ruby
+class PatientInfoThree < PatientInfoTwo
+  include_in_phi :created_at # Changed our mind
+end
+
+pi = PatientInfoThree.new(first_name: "Ash", last_name: "Ketchum")
+pi.created_at
+# PHIAccessException!
+pi.last_name
+# PHIAccessException!
+pi.allow_phi "Ash", "Testing PHI Attrs" { pi.last_name }
+# "Ketchum"
 ```
 
 ### Extending PHI Access
@@ -98,6 +199,53 @@ patient.patient_info.first_name
 
 **NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check. There are no guaranteed safeguards against circular `extend_phi_access` calls!
 
+### Check If PHI Access is allowed
+
+To check if PHI is allowed for a particular instance of a class call `phi_allowed?`.
+
+```ruby
+patient = Patient.new
+patient.phi_allowed? # => false
+
+patient.allow_phi('user@example.com', 'reason') do
+  patient.phi_allowed? # => true
+end
+
+patient.phi_allowed? # => false
+
+patient.allow_phi!('user@example.com', 'reason')
+patient.phi_allowed? # => true
+```
+
+This also works if access was granted at the class level
+
+```ruby
+patient = Patient.new
+patient.phi_allowed? # => false
+Patient.allow_phi!('user@example.com', 'reason')
+patient.phi_allowed? # => true
+```
+
+There is currently no class level equivalent for `phi_allowed?`.
+
+### Revoking PHI Access
+
+You can remove access to PHI with `disallow_phi!`. Each `disallow_phi!` call will revoke the last access granted by `allow_phi!`.
+
+At a class level:
+
+```ruby
+Patient.disallow_phi!
+```
+
+Or at a instance level:
+
+```ruby
+patient.disallow_phi!
+```
+
+There is currently no option currently to disallow all phi access.
+
 ### Manual PHI Access Logging
 
 If you aren't using `phi_record` you can still use `phi_attrs` to manually log phi access in your application. Where ever you are granting PHI access call:
@@ -110,24 +258,43 @@ PhiAttrs.log_phi_access(user, message)
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+It is recommended to use the provided `docker-compose` environment for development to help ensure dependency consistency and code isolation from other projects you may be working on.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-### Docker
+### Begin
 
     $ docker-compose up
     $ bin/ssh_to_container
 
-## Testing
+### Tests
 
-    $ bundle exec appraisal rspec
-    or
+Tests are written using [RSpec](http://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple rails versions.
+
     $ bin/run_tests
+    or for individual tests:
+    $ bin/ssh_to_container
+    $ bundle exec appraisal rspec spec/path/to/spec.rb
+
+### Console
+
+An interactive prompt that will allow you to experiment with the gem.
+
+    $ bin/ssh_to_container
+    $ bin/console
+
+### Local Install
+
+Run `bin/setup` to install dependencies. Then, run `bundle exec appraisal rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+
+To install this gem onto your local machine, run `bundle exec rake install`.
+
+### Versioning
+
+To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/wkirby/phi_attrs.
+Bug reports and pull requests are welcome on GitHub at https://github.com/apsislabs/phi_attrs.
 
 ## License
 

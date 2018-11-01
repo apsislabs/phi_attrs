@@ -362,10 +362,10 @@ module PhiAttrs
     #
     # @private
     #
-    # @return Array[String] all the user_id's passed in to allow_phi!
+    # @return String of all the user_id's passed in to allow_phi!
     #
     def all_phi_allowed_by
-      all_phi_context.map { |c| c[:user_id] }.to_s
+      all_phi_context.map { |c| "'#{c[:user_id]}'" }.join(',')
     end
 
     def all_phi_context
@@ -423,7 +423,7 @@ module PhiAttrs
           raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
 
           unless all_phi_context_logged?
-            PhiAttrs::Logger.info("#{self.class.name} access by #{all_phi_allowed_by}. Triggered by method: #{method_name}")
+            PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
             # phi_context[:logged] = true
             set_all_phi_context_logged
           end

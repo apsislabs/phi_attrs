@@ -136,92 +136,110 @@ RSpec.describe Logger do
         patient_jane.first_name
 
         expect(PhiAttrs::Logger.logger).to receive(:info).exactly(1).ordered
-        PatientInfo.disallow_phi!
+        PatientInfo.disallow_last_phi!
 
         expect(PhiAttrs::Logger.logger).to receive(:info).exactly(0).ordered
         patient_jane.birthday # Not logged again
       end
     end
 
-    context 'full stack for multiple allows' do
+    context 'full stack' do
       let(:first_allow) { 'first@allow.com' }
       let(:second_allow) { 'second@allow.com' }
       let(:regexp) { Regexp.new("#{first_allow}.+#{second_allow}|#{second_allow}.+#{first_allow}") }
 
-      def test_logger
-        expect(PhiAttrs::Logger.logger).to receive(:info).with(regexp)
-        patient_jane.first_name
+      context 'for multiple allows' do
+        def test_logger
+          expect(PhiAttrs::Logger.logger).to receive(:info).with(regexp)
+          patient_jane.first_name
+        end
+
+        context 'first class' do
+          it 'then class' do |t|
+            PatientInfo.allow_phi!(first_allow, t.full_description)
+            PatientInfo.allow_phi!(second_allow, t.full_description)
+            test_logger
+          end
+
+          it 'then instance' do |t|
+            PatientInfo.allow_phi!(first_allow, t.full_description)
+            patient_jane.allow_phi!(second_allow, t.full_description)
+            test_logger
+          end
+
+          it 'then class block' do |t|
+            PatientInfo.allow_phi!(first_allow, t.full_description)
+            PatientInfo.allow_phi!(second_allow, t.full_description) do
+              test_logger
+            end
+          end
+
+          it 'then instance block' do |t|
+            PatientInfo.allow_phi!(first_allow, t.full_description)
+            patient_jane.allow_phi!(second_allow, t.full_description) do
+              test_logger
+            end
+          end
+
+          it 'only one when previously revoked' do |t|
+            PatientInfo.allow_phi!(first_allow, t.full_description)
+            PatientInfo.disallow_phi!
+            patient_jane.allow_phi!(second_allow, t.full_description)
+            expect(PhiAttrs::Logger.logger).to receive(:info).with(Regexp.new(second_allow))
+            patient_jane.first_name
+          end
+        end
+
+        context 'first instance' do
+          it 'then class' do |t|
+            patient_jane.allow_phi!(first_allow, t.full_description)
+            PatientInfo.allow_phi!(second_allow, t.full_description)
+            test_logger
+          end
+
+          it 'then instance' do |t|
+            patient_jane.allow_phi!(first_allow, t.full_description)
+            patient_jane.allow_phi!(second_allow, t.full_description)
+            test_logger
+          end
+
+          it 'then class block' do |t|
+            patient_jane.allow_phi!(first_allow, t.full_description)
+            PatientInfo.allow_phi!(second_allow, t.full_description) do
+              test_logger
+            end
+          end
+
+          it 'then instance block' do |t|
+            patient_jane.allow_phi!(first_allow, t.full_description)
+            patient_jane.allow_phi!(second_allow, t.full_description) do
+              test_logger
+            end
+          end
+
+          it 'only one when previously revoked' do |t|
+            patient_jane.allow_phi!(first_allow, t.full_description)
+            patient_jane.disallow_phi!
+            PatientInfo.allow_phi!(second_allow, t.full_description)
+            expect(PhiAttrs::Logger.logger).to receive(:info).with(Regexp.new(second_allow))
+            patient_jane.first_name
+          end
+        end
       end
 
-      context 'first class' do
-        it 'then class' do |t|
+      context 'for disallow_phi!' do
+        it 'class' do |t|
           PatientInfo.allow_phi!(first_allow, t.full_description)
           PatientInfo.allow_phi!(second_allow, t.full_description)
-          test_logger
-        end
-
-        it 'then instance' do |t|
-          PatientInfo.allow_phi!(first_allow, t.full_description)
-          patient_jane.allow_phi!(second_allow, t.full_description)
-          test_logger
-        end
-
-        it 'then class block' do |t|
-          PatientInfo.allow_phi!(first_allow, t.full_description)
-          PatientInfo.allow_phi!(second_allow, t.full_description) do
-            test_logger
-          end
-        end
-
-        it 'then instance block' do |t|
-          PatientInfo.allow_phi!(first_allow, t.full_description)
-          patient_jane.allow_phi!(second_allow, t.full_description) do
-            test_logger
-          end
-        end
-
-        it 'only one when previously revoked' do |t|
-          PatientInfo.allow_phi!(first_allow, t.full_description)
+          expect(PhiAttrs::Logger.logger).to receive(:info).with(regexp)
           PatientInfo.disallow_phi!
-          patient_jane.allow_phi!(second_allow, t.full_description)
-          expect(PhiAttrs::Logger.logger).to receive(:info).with(Regexp.new(second_allow))
-          patient_jane.first_name
-        end
-      end
-
-      context 'first instance' do
-        it 'then class' do |t|
-          patient_jane.allow_phi!(first_allow, t.full_description)
-          PatientInfo.allow_phi!(second_allow, t.full_description)
-          test_logger
         end
 
-        it 'then instance' do |t|
+        it 'instance' do |t|
           patient_jane.allow_phi!(first_allow, t.full_description)
           patient_jane.allow_phi!(second_allow, t.full_description)
-          test_logger
-        end
-
-        it 'then class block' do |t|
-          patient_jane.allow_phi!(first_allow, t.full_description)
-          PatientInfo.allow_phi!(second_allow, t.full_description) do
-            test_logger
-          end
-        end
-
-        it 'then instance block' do |t|
-          patient_jane.allow_phi!(first_allow, t.full_description)
-          patient_jane.allow_phi!(second_allow, t.full_description) do
-            test_logger
-          end
-        end
-
-        it 'only one when previously revoked' do |t|
-          patient_jane.allow_phi!(first_allow, t.full_description)
+          expect(PhiAttrs::Logger.logger).to receive(:info).with(regexp)
           patient_jane.disallow_phi!
-          PatientInfo.allow_phi!(second_allow, t.full_description)
-          expect(PhiAttrs::Logger.logger).to receive(:info).with(Regexp.new(second_allow))
-          patient_jane.first_name
         end
       end
     end

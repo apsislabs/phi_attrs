@@ -134,9 +134,9 @@ module PhiAttrs
         end
 
         if allow_only.nil?
-          disallow_phi!
+          disallow_last_phi!
         else
-          allow_only.each { |t| t.disallow_phi!(preserve_extensions: true) }
+          allow_only.each { |t| t.disallow_last_phi!(preserve_extensions: true) }
           # We've handled any newly extended allowances ourselves above
         end
       end
@@ -173,12 +173,27 @@ module PhiAttrs
         __phi_stack.pop
       end
 
-      # Revoke PHI access for this class, if enabled by PhiRecord#allow_phi!
+      # Revoke all PHI access for this class, if enabled by PhiRecord#allow_phi!
       #
       # @example
       #   Foo.disallow_phi!
       #
       def disallow_phi!
+        message = __phi_stack.present? ? "PHI access disabled for #{__user_id_string(__phi_stack)}" : 'PHI access disabled. No class level access was granted.'
+
+        __reset_phi_stack
+
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+          PhiAttrs::Logger.info(message)
+        end
+      end
+
+      # Revoke last PHI access for this class, if enabled by PhiRecord#allow_phi!
+      #
+      # @example
+      #   Foo.disallow_last_phi!
+      #
+      def disallow_last_phi!
         removed_access = __phi_stack.pop
         message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
 
@@ -190,6 +205,16 @@ module PhiAttrs
       def __phi_stack
         RequestStore.store[:phi_access] ||= {}
         RequestStore.store[:phi_access][name] ||= []
+      end
+
+      def __reset_phi_stack
+        RequestStore.store[:phi_access] ||= {}
+        RequestStore.store[:phi_access][name] = []
+      end
+
+      def __user_id_string(access_list)
+        access_list ||= []
+        access_list.map { |c| "'#{c[:user_id]}'" }.join(',')
       end
     end
 
@@ -256,17 +281,35 @@ module PhiAttrs
       yield if block_given?
 
       new_extensions = @__phi_relations_extended - extended_instances
-      disallow_phi!(preserve_extensions: true)
+      disallow_last_phi!(preserve_extensions: true)
       revoke_extended_phi!(new_extensions) if new_extensions.any?
     end
 
-    # Revoke PHI access for a single instance of this class.
+    # Revoke all PHI access for a single instance of this class.
     #
     # @example
     #   foo = Foo.find(1)
     #   foo.disallow_phi!
     #
-    def disallow_phi!(preserve_extensions: false)
+    def disallow_phi!
+      PhiAttrs::Logger.tagged(*phi_log_keys) do
+        removed_access_for = self.class.__user_id_string(@__phi_access_stack)
+
+        revoke_extended_phi!
+        @__phi_access_stack = []
+
+        message = removed_access_for.present? ? "PHI access disabled for #{removed_access_for}" : 'PHI access disabled. No instance level access was granted.'
+        PhiAttrs::Logger.info(message)
+      end
+    end
+
+    # Revoke last PHI access for a single instance of this class.
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   foo.disallow_last_phi!
+    #
+    def disallow_last_phi!(preserve_extensions: false)
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         removed_access = @__phi_access_stack.pop
 
@@ -363,7 +406,7 @@ module PhiAttrs
     # @return String of all the user_id's passed in to allow_phi!
     #
     def all_phi_allowed_by
-      all_phi_context.map { |c| "'#{c[:user_id]}'" }.join(',')
+      self.class.__user_id_string(all_phi_context)
     end
 
     def all_phi_context
@@ -477,7 +520,7 @@ module PhiAttrs
     def revoke_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
-        relation.disallow_phi! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+        relation.disallow_last_phi! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
       end
       @__phi_relations_extended.subtract(relations)
     end

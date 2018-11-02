@@ -97,7 +97,7 @@ PatientInfo.allow_phi('allowed_user@example.com', 'Display Customer Data') do
 end # Access no longer allowed beyond this point
 ```
 
-### Controlling What is PHI
+### Controlling What Is PHI
 
 When you include `phi_model` on your active record all fields except the id will be considered PHI.
 
@@ -199,7 +199,7 @@ patient.patient_info.first_name
 
 **NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check. There are no guaranteed safeguards against circular `extend_phi_access` calls!
 
-### Check If PHI Access is allowed
+### Check If PHI Access Is Allowed
 
 To check if PHI is allowed for a particular instance of a class call `phi_allowed?`.
 
@@ -230,7 +230,7 @@ There is currently no class level equivalent for `phi_allowed?`.
 
 ### Revoking PHI Access
 
-You can remove access to PHI with `disallow_phi!`. Each `disallow_phi!` call will revoke the last access granted by `allow_phi!`.
+You can remove access to PHI with `disallow_phi!`. Each `disallow_phi!` call removes all access granted by `allow_phi!` at that level (class or instance).
 
 At a class level:
 
@@ -244,7 +244,7 @@ Or at a instance level:
 patient.disallow_phi!
 ```
 
-There is currently no option currently to disallow all phi access.
+* *If access is granted at both class and instance level you will need to call `disallow_phi!` twice, once for the instance and once for the class.*
 
 ### Manual PHI Access Logging
 
@@ -255,6 +255,11 @@ user = 'user@example.com'
 message = 'accessed list of all patients'
 PhiAttrs.log_phi_access(user, message)
 ```
+
+## Best Practices
+
+* Mix and matching `instance`, `class` and `block` syntaxes for allowing/denying PHI is not recommended.
+  * Sticking with one style in your application will make it easier to understand what access is granted and where.
 
 ## Development
 

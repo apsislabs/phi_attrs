@@ -82,7 +82,7 @@ module PhiAttrs
                          })
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
-          PhiAttrs::Logger.info("PHI Access Enabled for #{user_id}: #{reason}")
+          PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}: #{reason}'")
         end
       end
 
@@ -179,9 +179,11 @@ module PhiAttrs
       #   Foo.disallow_phi!
       #
       def disallow_phi!
-        __phi_stack.pop
+        removed_access = __phi_stack.pop
+        message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
+
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
-          PhiAttrs::Logger.info('PHI access disabled') # TODO: Log which frame
+          PhiAttrs::Logger.info(message)
         end
       end
 
@@ -266,11 +268,11 @@ module PhiAttrs
     #
     def disallow_phi!(preserve_extensions: false)
       PhiAttrs::Logger.tagged(*phi_log_keys) do
-        @__phi_access_stack.pop
+        removed_access = @__phi_access_stack.pop
 
         revoke_extended_phi! unless preserve_extensions
-
-        PhiAttrs::Logger.info('PHI access disabled')
+        message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No instance level access was granted.'
+        PhiAttrs::Logger.info(message)
       end
     end
 
@@ -354,6 +356,28 @@ module PhiAttrs
       self.class.__phi_stack[-1]
     end
 
+    # The unique identifiers for everything with access allowed on this instance.
+    #
+    # @private
+    #
+    # @return String of all the user_id's passed in to allow_phi!
+    #
+    def all_phi_allowed_by
+      all_phi_context.map { |c| "'#{c[:user_id]}'" }.join(',')
+    end
+
+    def all_phi_context
+      (@__phi_access_stack || []) + (self.class.__phi_stack || [])
+    end
+
+    def all_phi_context_logged?
+      all_phi_context.all? { |v| v[:logged] }
+    end
+
+    def set_all_phi_context_logged
+      all_phi_context.each { |c| c[:logged] = true }
+    end
+
     # Core logic for wrapping methods in PHI access logging and access restriction.
     #
     # This method takes a single method name, and creates a new method using
@@ -396,9 +420,9 @@ module PhiAttrs
         PhiAttrs::Logger.tagged(*phi_log_keys) do
           raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
 
-          unless phi_context[:logged]
-            PhiAttrs::Logger.info("'#{phi_allowed_by}' accessing #{self.class.name}. Triggered by method: #{method_name}")
-            phi_context[:logged] = true
+          unless all_phi_context_logged?
+            PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
+            set_all_phi_context_logged
           end
 
           send(unwrapped_method, *args, &block)

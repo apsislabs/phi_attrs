@@ -202,6 +202,17 @@ module PhiAttrs
         end
       end
 
+      # Whether PHI access is allowed for this class
+      #
+      # @example
+      #   Foo.phi_allowed?
+      #
+      # @return [Boolean] whether PHI access is allowed for this instance
+      #
+      def phi_allowed?
+        __phi_stack.present? && __phi_stack[-1][:phi_access_allowed]
+      end
+
       def __phi_stack
         RequestStore.store[:phi_access] ||= {}
         RequestStore.store[:phi_access][name] ||= []

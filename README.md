@@ -217,7 +217,7 @@ patient.allow_phi!('user@example.com', 'reason')
 patient.phi_allowed? # => true
 ```
 
-This also works if access was granted at the class level
+This also works if access was granted at the class level:
 
 ```ruby
 patient = Patient.new
@@ -226,7 +226,28 @@ Patient.allow_phi!('user@example.com', 'reason')
 patient.phi_allowed? # => true
 ```
 
-There is currently no class level equivalent for `phi_allowed?`.
+There is also a `phi_allowed?` check available to see at the class level.
+
+```ruby
+Patient.phi_allowed? # => false
+Patient.allow_phi!('user@example.com', 'reason')
+Patient.phi_allowed? # => true
+```
+
+**Note that any instance level access grants will not change class level access:**
+
+```ruby
+patient = Patient.new
+
+patient.phi_allowed? # => false
+Patient.phi_allowed? # => false
+
+patient.allow_phi!('user@example.com', 'reason')
+
+patient.phi_allowed? # => true
+Patient.phi_allowed? # => false
+```
+
 
 ### Revoking PHI Access
 

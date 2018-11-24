@@ -267,6 +267,27 @@ patient.disallow_phi!
 
 * *If access is granted at both class and instance level you will need to call `disallow_phi!` twice, once for the instance and once for the class.*
 
+There is also a block syntax of `disallow_phi` for temporary suppression phi access to the class or instance level
+
+```ruby
+patient = PatientInfo.find(params[:id])
+patient.allow_phi!('allowed_user@example.com', 'Display Patient Data')
+patient.diallow_phi do
+  @data = patient.to_json # PHIAccessException
+end # Access is allowed again beyond this point
+```
+
+or a block level on a class:
+
+```ruby
+PatientInfo.allow_phi!('allowed_user@example.com', 'Display Patient Data')
+PatientInfo.diallow_phi do
+  @data = PatientInfo.find(params[:id]).to_json # PHIAccessException
+end # Access is allowed again beyond this point
+```
+
+* *Reminder instance level `phi_allow` will take precedent over a class level `disallow_phi`*
+
 ### Manual PHI Access Logging
 
 If you aren't using `phi_record` you can still use `phi_attrs` to manually log phi access in your application. Where ever you are granting PHI access call:

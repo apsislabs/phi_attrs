@@ -162,8 +162,6 @@ module PhiAttrs
       #   end
       #   # PHI Access Allowed Again
       def disallow_phi
-        raise 'NotImplemented'
-
         __phi_stack.push({
                            phi_access_allowed: false
                          })
@@ -314,6 +312,30 @@ module PhiAttrs
       end
     end
 
+    # Dissables PHI access for a single instance of this class inside the block.
+    # Nested calls to allow_phi will log once per nested call
+    #
+    # @param [String] user_id   A unique identifier for the person accessing the PHI
+    # @param [String] reason    The reason for accessing PHI
+    # @yield                    The block in which phi access is allowed
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   foo.allow_phi('user@example.com', 'viewing patient record') do
+    #    # PHI Access Allowed Here
+    #   end
+    #   # PHI Access Disallowed Here
+    #
+    def disallow_phi
+      add_disallow_flag!
+      add_disallow_flag_to_extended_phi!
+
+      yield if block_given?
+
+      remove_disallow_flag_revoke_extended_phi!
+      remove_disallow_flag!
+    end
+
     # Revoke last PHI access for a single instance of this class.
     #
     # @example
@@ -340,6 +362,22 @@ module PhiAttrs
     #
     def phi_allowed?
       !phi_context.nil? && phi_context[:phi_access_allowed]
+    end
+
+    protected
+
+    # Adds a disallow phi flag to instance internal stack.
+    # @private since subject to change
+    def add_disallow_flag!
+      @__phi_access_stack.push({
+                                 phi_access_allowed: false
+                               })
+    end
+
+    # removes the last item in instance internal stack.
+    # @private since subject to change
+    def remove_disallow_flag!
+      @__phi_access_stack.pop
     end
 
     private
@@ -534,6 +572,22 @@ module PhiAttrs
         relation.disallow_last_phi! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
       end
       @__phi_relations_extended.subtract(relations)
+    end
+
+    # Adds a disallow PHI access to the stack for block syntax for all `extend`ed relations (or only those given)
+    def add_disallow_flag_to_extended_phi!(relations = nil)
+      relations ||= @__phi_relations_extended
+      relations.each do |relation|
+        relation.add_disallow_flag! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+      end
+    end
+
+    # Adds a disallow PHI access to the stack for all for all `extend`ed relations (or only those given)
+    def remove_disallow_flag_revoke_extended_phi!(relations = nil)
+      relations ||= @__phi_relations_extended
+      relations.each do |relation|
+        relation.remove_disallow_flag! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+      end
     end
 
     def relation_klass(rel)

@@ -43,6 +43,20 @@ RSpec.describe 'class phi_allowed?' do
 
       expect(PatientInfo.phi_allowed?).to be false
     end
+
+    it 'revokes access for disallow_phi block' do |t|
+      expect(PatientInfo.phi_allowed?).to be false
+
+      PatientInfo.allow_phi!(file_name, t.full_description)
+
+      expect(PatientInfo.phi_allowed?).to be true
+
+      PatientInfo.disallow_phi do
+        expect(PatientInfo.phi_allowed?).to be false
+      end
+
+      expect(PatientInfo.phi_allowed?).to be true
+    end
   end
 
   context 'nested allowances' do
@@ -59,13 +73,53 @@ RSpec.describe 'class phi_allowed?' do
 
       expect(PatientInfo.phi_allowed?).to be false
     end
+
+    it 'retains outer access when disallow block at inner level' do |t|
+      PatientInfo.allow_phi(file_name, t.full_description) do
+        expect(PatientInfo.phi_allowed?).to be true
+
+        PatientInfo.disallow_phi do
+          expect(PatientInfo.phi_allowed?).to be false
+        end # Inner disallow removed
+
+        expect(PatientInfo.phi_allowed?).to be true
+      end # Outer permission revoked
+
+      expect(PatientInfo.phi_allowed?).to be false
+    end
+
+    it 'retains outer access with nested disallow blocks' do |t|
+      PatientInfo.allow_phi!(file_name, t.full_description)
+
+      PatientInfo.disallow_phi do
+        expect(PatientInfo.phi_allowed?).to be false
+
+        PatientInfo.disallow_phi do
+          expect(PatientInfo.phi_allowed?).to be false
+        end # Inner disallow removed
+
+        expect(PatientInfo.phi_allowed?).to be false
+      end # Outer disallow removed
+
+      expect(PatientInfo.phi_allowed?).to be true
+    end
   end
 
-  context 'with instance allow_phi' do
-    it 'does not change status' do |t|
+  context 'with instance' do
+    it 'allow_phi does not change status' do |t|
       expect(PatientInfo.phi_allowed?).to be false
       patient_jane.allow_phi(file_name, t.full_description) do
         expect(PatientInfo.phi_allowed?).to be false
+      end
+    end
+
+    it 'disallow_phi does not change status' do |t|
+      expect(PatientInfo.phi_allowed?).to be false
+      PatientInfo.allow_phi!(file_name, t.full_description)
+      expect(PatientInfo.phi_allowed?).to be true
+
+      patient_jane.disallow_phi do
+        expect(PatientInfo.phi_allowed?).to be true
       end
     end
   end

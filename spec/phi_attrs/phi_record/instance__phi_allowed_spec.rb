@@ -61,6 +61,20 @@ RSpec.describe 'instance phi_allowed?' do
           john.allow_phi!(file_name, t.full_description)
           expect(john.phi_allowed?).to be true
         end
+
+        it 'revokes access for disallow_phi block' do |t|
+          expect(patient_jane.phi_allowed?).to be false
+
+          patient_jane.allow_phi!(file_name, t.full_description)
+
+          expect(patient_jane.phi_allowed?).to be true
+
+          patient_jane.disallow_phi do
+            expect(patient_jane.phi_allowed?).to be false
+          end
+
+          expect(patient_jane.phi_allowed?).to be true
+        end
       end
 
       context 'collection' do
@@ -205,6 +219,35 @@ RSpec.describe 'instance phi_allowed?' do
           expect(pd.phi_allowed?).to be true
         end
       end
+
+      context 'block disallow' do
+        it 'disallows access to extended association' do |t|
+          expect(patient_mary.phi_allowed?).to be false
+          expect(patient_mary.patient_detail.phi_allowed?).to be false
+
+          patient_mary.allow_phi!(file_name, t.full_description)
+
+          expect(patient_mary.phi_allowed?).to be true
+          expect(patient_mary.patient_detail.phi_allowed?).to be true
+
+          patient_mary.disallow_phi do
+            expect(patient_mary.phi_allowed?).to be false
+            expect(patient_mary.patient_detail.phi_allowed?).to be false
+          end
+        end
+
+        it 'disallows access to :has_many associations' do |t|
+          expect(patient_mary.health_records.first.phi_allowed?).to be false
+
+          patient_mary.allow_phi!(file_name, t.full_description)
+
+          expect(patient_mary.health_records.first.phi_allowed?).to be true
+
+          patient_mary.disallow_phi do
+            expect(patient_mary.health_records.first.phi_allowed?).to be false
+          end
+        end
+      end
     end
 
     context 'nested allowances' do
@@ -223,6 +266,36 @@ RSpec.describe 'instance phi_allowed?' do
         expect(patient_with_detail.phi_allowed?).to be false
         expect(patient_with_detail.patient_detail.phi_allowed?).to be false
       end
+    end
+
+    it 'retains outer access when disallow block at inner level' do |t|
+      patient_jane.allow_phi(file_name, t.full_description) do
+        expect(patient_jane.phi_allowed?).to be true
+
+        patient_jane.disallow_phi do
+          expect(patient_jane.phi_allowed?).to be false
+        end # Inner disallow removed
+
+        expect(patient_jane.phi_allowed?).to be true
+      end # Outer permission revoked
+
+      expect(patient_jane.phi_allowed?).to be false
+    end
+
+    it 'retains outer access with nested disallow blocks' do |t|
+      patient_jane.allow_phi!(file_name, t.full_description)
+
+      patient_jane.disallow_phi do
+        expect(patient_jane.phi_allowed?).to be false
+
+        patient_jane.disallow_phi do
+          expect(patient_jane.phi_allowed?).to be false
+        end # Inner disallow removed
+
+        expect(patient_jane.phi_allowed?).to be false
+      end # Outer disallow removed
+
+      expect(patient_jane.phi_allowed?).to be true
     end
   end
 
@@ -266,6 +339,16 @@ RSpec.describe 'instance phi_allowed?' do
         PatientInfo.disallow_phi!
 
         expect(patient_jane.phi_allowed?).to be false
+      end
+
+      it 'disallow_phi does not change status' do |t|
+        expect(patient_jane.phi_allowed?).to be false
+        patient_jane.allow_phi!(file_name, t.full_description)
+        expect(patient_jane.phi_allowed?).to be true
+
+        PatientInfo.disallow_phi do
+          expect(patient_jane.phi_allowed?).to be true
+        end
       end
     end
 

@@ -332,7 +332,7 @@ module PhiAttrs
 
       yield if block_given?
 
-      remove_disallow_flag_revoke_extended_phi!
+      remove_disallow_flag_from_extended_phi!
       remove_disallow_flag!
     end
 
@@ -583,7 +583,7 @@ module PhiAttrs
     end
 
     # Adds a disallow PHI access to the stack for all for all `extend`ed relations (or only those given)
-    def remove_disallow_flag_revoke_extended_phi!(relations = nil)
+    def remove_disallow_flag_from_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
         relation.remove_disallow_flag! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)

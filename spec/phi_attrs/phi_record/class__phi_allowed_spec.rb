@@ -5,7 +5,7 @@ RSpec.describe 'class phi_allowed?' do
   let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
 
   context 'authorized' do
-    it 'allows access to any instance' do |t|
+    it 'works' do |t|
       expect(PatientInfo.phi_allowed?).to be false
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect(PatientInfo.phi_allowed?).to be true

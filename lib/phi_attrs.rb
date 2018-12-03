@@ -13,27 +13,42 @@ require 'phi_attrs/exceptions'
 require 'phi_attrs/phi_record'
 
 module PhiAttrs
-  def phi_model(with: nil, except: nil)
-    include PhiRecord
+  module Controller
+    included do
+      before_action :record_i18n_data
+
+      private
+
+      def record_i18n_data
+        RequestStore.store[:phi_attrs_controller] = self.class.name
+        RequestStore.store[:phi_attrs_action] = params[:action]
+      end
+    end
   end
 
-  @@log_path = nil
+  module Model
+    def phi_model(with: nil, except: nil)
+      include PhiRecord
+    end
 
-  def self.configure
-    yield self if block_given?
-  end
+    @@log_path = nil
 
-  def self.log_path
-    @@log_path
-  end
+    def self.configure
+      yield self if block_given?
+    end
 
-  def self.log_path=(value)
-    @@log_path = value
-  end
+    def self.log_path
+      @@log_path
+    end
 
-  def self.log_phi_access(user, message)
-    PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, user) do
-      PhiAttrs::Logger.info(message)
+    def self.log_path=(value)
+      @@log_path = value
+    end
+
+    def self.log_phi_access(user, message)
+      PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, user) do
+        PhiAttrs::Logger.info(message)
+      end
     end
   end
 end

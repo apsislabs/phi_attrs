@@ -255,7 +255,8 @@ module PhiAttrs
     #   foo = Foo.find(1)
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
-    def allow_phi!(user_id, reason)
+    def allow_phi!(user_id, reason=nil)
+      reason ||= i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
       PhiAttrs::Logger.tagged(*phi_log_keys) do
@@ -283,7 +284,8 @@ module PhiAttrs
     #   end
     #   # PHI Access Disallowed Here
     #
-    def allow_phi(user_id, reason)
+    def allow_phi(user_id, reason=nil)
+      reason ||= i18n_reason
       extended_instances = @__phi_relations_extended.clone
       allow_phi!(user_id, reason)
 
@@ -603,6 +605,36 @@ module PhiAttrs
 
     def unwrapped_extended_name(method_name)
       :"__#{method_name}_phi_access_original"
+    end
+
+    def i18n_reason
+      controller = RequestStore.store[:phi_attrs_controller]
+      action = RequestStore.store[:phi_attrs_action]
+
+      return nil if controller.blank? || action.blank?
+
+      i18n_path = path_to_controller_and_action(controller, action)
+      i18n_path.push(*path_to_class)
+      i18n_key = i18n_path.join('.')
+
+      return I18n.t(i18n_key) if I18n.exists?(i18n_key)
+
+      locale = I18n.locale || I18n.default_locale
+
+      PhiAttrs::Logger.warn "No #{locale} PHI Reason found for #{i18n_key}"
+    end
+
+    def path_to_controller_and_action(controller, action)
+      module_paths = controller.underscore.split('/')
+      class_name_parts = module_paths.pop.split('_')
+      class_name_parts.pop if class_name_parts[-1] == 'controller'
+      module_paths.push(class_name_parts.join('_'), action)
+    end
+
+    def path_to_class
+      module_paths = self.class.name.underscore.split("/")
+      class_name_parts = module_paths.pop.split('_')
+      module_paths.push(class_name_parts.join('_'))
     end
   end
 end

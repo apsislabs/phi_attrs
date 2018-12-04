@@ -44,13 +44,13 @@ module PhiAttrs
 
     included do
       before_action :record_i18n_data
+    end
 
-      private
+    private
 
-      def record_i18n_data
-        RequestStore.store[:phi_attrs_controller] = self.class.name
-        RequestStore.store[:phi_attrs_action] = params[:action]
-      end
+    def record_i18n_data
+      RequestStore.store[:phi_attrs_controller] = self.class.name
+      RequestStore.store[:phi_attrs_action] = params[:action]
     end
   end
 end

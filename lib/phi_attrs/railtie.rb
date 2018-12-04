@@ -8,7 +8,7 @@ module PhiAttrs
     initializer 'phi_attrs.initialize' do |_app|
       ActiveSupport.on_load(:active_record) do
         ActiveRecord::Base.send :extend, PhiAttrs::Model
-        ActionController::Base.send :extend, PhiAttrs::Controller
+        ActionController::Base.send :include, PhiAttrs::Controller
       end
     end
   end

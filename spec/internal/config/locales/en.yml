@@ -1,0 +1,13 @@
+en:
+  phi:
+    sample:
+      index:
+        patient_info: "Summary View on Sample"
+      show:
+        patent_info: "Typoed patient info"
+    namespace:
+      nested:
+        index:
+          patent_info: "Typoed patient info"
+        show:
+          patient_info: "Detail View on Nested in Namespace"

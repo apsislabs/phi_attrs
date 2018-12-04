@@ -13,10 +13,6 @@ require 'phi_attrs/exceptions'
 require 'phi_attrs/phi_record'
 
 module PhiAttrs
-  def phi_model(with: nil, except: nil)
-    include PhiRecord
-  end
-
   @@log_path = nil
 
   def self.configure
@@ -36,19 +32,25 @@ module PhiAttrs
       PhiAttrs::Logger.info(message)
     end
   end
-end
 
-module PhiAttrsController
-  extend ActiveSupport::Concern
+  module Model
+    def phi_model(with: nil, except: nil)
+      include PhiRecord
+    end
+  end
 
-  included do
-    before_action :record_i18n_data
+  module Controller
+    extend ActiveSupport::Concern
 
-    private
+    included do
+      before_action :record_i18n_data
 
-    def record_i18n_data
-      RequestStore.store[:phi_attrs_controller] = self.class.name
-      RequestStore.store[:phi_attrs_action] = params[:action]
+      private
+
+      def record_i18n_data
+        RequestStore.store[:phi_attrs_controller] = self.class.name
+        RequestStore.store[:phi_attrs_action] = params[:action]
+      end
     end
   end
 end

@@ -14,6 +14,7 @@ require 'phi_attrs/phi_record'
 
 module PhiAttrs
   @@log_path = nil
+  @@current_user_method = nil
 
   def self.configure
     yield self if block_given?
@@ -25,6 +26,14 @@ module PhiAttrs
 
   def self.log_path=(value)
     @@log_path = value
+  end
+
+  def self.current_user_method
+    @@current_user_method
+  end
+
+  def self.current_user_method=(value)
+    @@current_user_method = value
   end
 
   def self.log_phi_access(user, message)
@@ -51,6 +60,7 @@ module PhiAttrs
     def record_i18n_data
       RequestStore.store[:phi_attrs_controller] = self.class.name
       RequestStore.store[:phi_attrs_action] = params[:action]
+      RequestStore.store[:phi_attrs_current_user] = try(PhiAttrs.current_user_method) unless PhiAttrs.current_user_method.nil?
     end
   end
 end

@@ -38,7 +38,9 @@ Or install it yourself as:
 
 ## Initialize
 
-Create an initializer to configure the PHI log file location. Example:
+Create an initializer to configure the PHI log file location.
+
+Example:
 
  `config/initializers/phi_attrs.rb`
 
@@ -297,6 +299,36 @@ user = 'user@example.com'
 message = 'accessed list of all patients'
 PhiAttrs.log_phi_access(user, message)
 ```
+
+### Default User
+
+Passing around the current user can clutter your code. PHI Attrs allows you to
+configure a controller method that will be called to get the currently logged in
+user:
+
+#### `config/initializers/phi_attrs.rb`
+
+```ruby
+PhiAttrs.configure do |conf|
+  conf.current_user_method = :user_email
+end
+```
+
+#### `app/controllers/home_controller.rb`
+
+```ruby
+class ApplicationController < ActionController::Base
+  private
+
+  def user_email
+    current_user&.email
+  end
+end
+```
+
+With the above code, any call to `allow_phi` (that starts in a controller
+derived from ApplicationController) will use the result of `user_email` as the
+user argument of `allow_phi`.
 
 ### Reason Translations
 

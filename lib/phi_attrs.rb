@@ -60,7 +60,11 @@ module PhiAttrs
     def record_i18n_data
       RequestStore.store[:phi_attrs_controller] = self.class.name
       RequestStore.store[:phi_attrs_action] = params[:action]
-      RequestStore.store[:phi_attrs_current_user] = try(PhiAttrs.current_user_method) unless PhiAttrs.current_user_method.nil?
+
+      return if PhiAttrs.current_user_method.nil?
+      return unless respond_to?(PhiAttrs.current_user_method, true)
+
+      RequestStore.store[:phi_attrs_current_user] = send(PhiAttrs.current_user_method)
     end
   end
 end

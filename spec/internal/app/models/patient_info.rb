@@ -15,4 +15,20 @@ class PatientInfo < ApplicationRecord
   def birthday
     Time.current
   end
+
+  def summary_json
+    {
+      id: public_id,
+      first: first_name,
+      last: last_name
+    }
+  end
+
+  def detail_json
+    extra = {
+      detail: patient_detail.detail,
+      health_record_count: health_records.count
+    }
+    summary_json.merge(extra)
+  end
 end

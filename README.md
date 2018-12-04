@@ -298,6 +298,49 @@ message = 'accessed list of all patients'
 PhiAttrs.log_phi_access(user, message)
 ```
 
+### Reason Translations
+
+It can get cumbersome to pass around PHI Access reasons. PHI Attrs allows you to
+use your translations file to keep your code dry. If your translation file
+contains a reason for the combination of controller, action, and model you can
+skip passing `reason`:
+
+```ruby
+module Admin
+  class PatientDashboardController < ApplicationController
+    def expelliarmus
+      patient_info.allow_phi(current_user) do
+        # reason tries to use `phi.admin.patient_dashbaord.expelliarmus.patient_info`
+      end
+    end
+
+    def leviosa
+      patient_info.allow_phi(current_user) do
+        # reason tries to use `phi.admin.patient_dashbaord.expelliarmus.patient_info`
+      end
+    end
+  end
+end
+```
+
+The following `en.yml` file would work:
+
+```yml
+en:
+  phi:
+    admin:
+      patient_dashboard:
+        expelliarmus:
+          patient_info: "Patient Disarmed"
+        leviosa:
+          patient_info: "Patient Levitated"
+```
+
+If you have a typo in your en.yml file or you choose not to provide a translation
+for your phi reasons your code will fail with an ArgumentError. To assist you in
+debugging PHI Attrs will print a `:warn` message with the expected location for
+the missing translation.
+
 ## Best Practices
 
 * Mix and matching `instance`, `class` and `block` syntaxes for allowing/denying PHI is not recommended.

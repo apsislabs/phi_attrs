@@ -255,7 +255,7 @@ module PhiAttrs
     #   foo = Foo.find(1)
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
-    def allow_phi!(user_id, reason=nil)
+    def allow_phi!(user_id, reason = nil)
       reason ||= i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
@@ -284,7 +284,7 @@ module PhiAttrs
     #   end
     #   # PHI Access Disallowed Here
     #
-    def allow_phi(user_id, reason=nil)
+    def allow_phi(user_id, reason = nil)
       reason ||= i18n_reason
       extended_instances = @__phi_relations_extended.clone
       allow_phi!(user_id, reason)
@@ -632,7 +632,7 @@ module PhiAttrs
     end
 
     def path_to_class
-      module_paths = self.class.name.underscore.split("/")
+      module_paths = self.class.name.underscore.split('/')
       class_name_parts = module_paths.pop.split('_')
       module_paths.push(class_name_parts.join('_'))
     end

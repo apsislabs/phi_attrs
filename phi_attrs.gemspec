@@ -13,6 +13,13 @@ Gem::Specification.new do |spec|
   spec.summary       = 'PHI Access Restriction & Logging for Rails ActiveRecord'
   spec.homepage      = 'http://www.apsis.io'
   spec.license       = 'MIT'
+  spec.post_install_message = %q`
+    Thank you for installing phi_attrs. By installing this gem,
+    you acknowledge and agree to the disclaimer as provided in the
+    DISCLAIMER.txt file.
+
+    For full details, see: https://github.com/apsislabs/phi_attrs/blob/master/DISCLAIMER.txt
+  `
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})

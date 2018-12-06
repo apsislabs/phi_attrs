@@ -427,6 +427,8 @@ To release a new version, update the version number in `version.rb`, and then ru
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/apsislabs/phi_attrs.
 
+Any PRs should be accompanied with documentation in `README.md`, and changes documented in [`CHANGELOG.md`](https://keepachangelog.com/).
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

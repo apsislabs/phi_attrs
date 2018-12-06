@@ -38,7 +38,9 @@ Or install it yourself as:
 
 ## Initialize
 
-Create an initializer to configure the PHI log file location. Example:
+Create an initializer to configure the PHI log file location.
+
+Example:
 
  `config/initializers/phi_attrs.rb`
 
@@ -340,6 +342,45 @@ If you have a typo in your en.yml file or you choose not to provide a translatio
 for your phi reasons your code will fail with an ArgumentError. To assist you in
 debugging PHI Attrs will print a `:warn` message with the expected location for
 the missing translation.
+
+### Default User
+
+Passing around the current user can clutter your code. PHI Attrs allows you to
+configure a controller method that will be called to get the currently logged in
+user:
+
+#### `config/initializers/phi_attrs.rb`
+
+```ruby
+PhiAttrs.configure do |conf|
+  conf.current_user_method = :user_email
+end
+```
+
+#### `app/controllers/home_controller.rb`
+
+```ruby
+class ApplicationController < ActionController::Base
+  private
+
+  def user_email
+    current_user&.email
+  end
+end
+```
+
+With the above code, any call to `allow_phi` (that starts in a controller
+derived from ApplicationController) will use the result of `user_email` as the
+user argument of `allow_phi`.
+
+Note that if you have a default user, but choose not to use translations for
+reasons you'll have to pass `nil` as the user:
+
+```ruby
+person_phi.allow_phi(nil, "Because I felt like looking at PHI") do
+  # Allows PHI
+end
+```
 
 ## Best Practices
 

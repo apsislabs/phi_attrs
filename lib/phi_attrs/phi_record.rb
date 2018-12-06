@@ -72,7 +72,8 @@ module PhiAttrs
       # @example
       #   Foo.allow_phi!('user@example.com', 'viewing patient record')
       #
-      def allow_phi!(user_id, reason = nil)
+      def allow_phi!(user_id = nil, reason = nil)
+        user_id ||= current_user
         reason ||= i18n_reason
         raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
@@ -106,7 +107,7 @@ module PhiAttrs
       #   end
       #   # PHI Access Disallowed
       #
-      def allow_phi(user_id, reason = nil, allow_only: nil)
+      def allow_phi(user_id = nil, reason = nil, allow_only: nil)
         if allow_only.present?
           raise ArgumentError, 'allow_only must be iterable with each' unless allow_only.respond_to?(:each)
           raise ArgumentError, "allow_only must all be `#{name}` objects" unless allow_only.all? { |t| t.is_a?(self) }
@@ -227,6 +228,10 @@ module PhiAttrs
         access_list.map { |c| "'#{c[:user_id]}'" }.join(',')
       end
 
+      def current_user
+        RequestStore.store[:phi_attrs_current_user]
+      end
+
       def i18n_reason
         controller = RequestStore.store[:phi_attrs_controller]
         action = RequestStore.store[:phi_attrs_action]
@@ -286,7 +291,8 @@ module PhiAttrs
     #   foo = Foo.find(1)
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
-    def allow_phi!(user_id, reason = nil)
+    def allow_phi!(user_id = nil, reason = nil)
+      user_id ||= self.class.current_user
       reason ||= self.class.i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
@@ -315,7 +321,7 @@ module PhiAttrs
     #   end
     #   # PHI Access Disallowed Here
     #
-    def allow_phi(user_id, reason = nil)
+    def allow_phi(user_id = nil, reason = nil)
       extended_instances = @__phi_relations_extended.clone
       allow_phi!(user_id, reason)
 

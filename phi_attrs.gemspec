@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'http://www.apsis.io'
   spec.license       = 'MIT'
   spec.post_install_message = %q`
-    Thank you for installing phi_attrs. By installing this gem,
+    Thank you for installing phi_attrs! By installing this gem,
     you acknowledge and agree to the disclaimer as provided in the
     DISCLAIMER.txt file.
 

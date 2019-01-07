@@ -238,7 +238,7 @@ module PhiAttrs
 
         return nil if controller.blank? || action.blank?
 
-        i18n_path = ['phi'] + __path_to_controller_and_action(controller, action)
+        i18n_path = [PhiAttrs.translation_prefix] + __path_to_controller_and_action(controller, action)
         i18n_path.push(*__path_to_class)
         i18n_key = i18n_path.join('.')
 

@@ -154,6 +154,10 @@ RSpec.describe Logger do
           patient_jane.first_name
         end
 
+        def expect_disallow_message(allowed)
+          expect(PhiAttrs::Logger.logger).to receive(:info).with("PHI access disabled for #{allowed}")
+        end
+
         context 'first class' do
           it 'then class' do |t|
             PatientInfo.allow_phi!(first_allow, t.full_description)
@@ -169,15 +173,17 @@ RSpec.describe Logger do
 
           it 'then class block' do |t|
             PatientInfo.allow_phi!(first_allow, t.full_description)
-            PatientInfo.allow_phi!(second_allow, t.full_description) do
+            PatientInfo.allow_phi(second_allow, t.full_description) do
               test_logger
+              expect_disallow_message(second_allow)
             end
           end
 
           it 'then instance block' do |t|
             PatientInfo.allow_phi!(first_allow, t.full_description)
-            patient_jane.allow_phi!(second_allow, t.full_description) do
+            patient_jane.allow_phi(second_allow, t.full_description) do
               test_logger
+              expect_disallow_message(second_allow)
             end
           end
 
@@ -205,15 +211,17 @@ RSpec.describe Logger do
 
           it 'then class block' do |t|
             patient_jane.allow_phi!(first_allow, t.full_description)
-            PatientInfo.allow_phi!(second_allow, t.full_description) do
+            PatientInfo.allow_phi(second_allow, t.full_description) do
               test_logger
+              expect_disallow_message(second_allow)
             end
           end
 
           it 'then instance block' do |t|
             patient_jane.allow_phi!(first_allow, t.full_description)
-            patient_jane.allow_phi!(second_allow, t.full_description) do
+            patient_jane.allow_phi(second_allow, t.full_description) do
               test_logger
+              expect_disallow_message(second_allow)
             end
           end
 

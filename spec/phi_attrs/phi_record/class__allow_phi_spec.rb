@@ -100,4 +100,24 @@ RSpec.describe 'class allow_phi' do
       expect { patient_with_detail.patient_detail.detail }.to raise_error(access_error)
     end
   end
+
+  context 'block checks' do
+    context 'allow_phi' do
+      it 'succeeds' do
+        expect { PatientInfo.allow_phi!('ok', 'ok') }.not_to raise_error
+      end
+      it 'raises ArgumentError with block' do
+        expect { PatientInfo.allow_phi!('ok', 'ok') {} }.to raise_error(ArgumentError)
+      end
+    end
+
+    context 'allow_phi!' do
+      it 'succeeds' do
+        expect { PatientInfo.allow_phi('ok', 'ok') {} }.not_to raise_error
+      end
+      it 'raises ArgumentError for allow_phi! without block' do
+        expect { PatientInfo.allow_phi('ok', 'ok') }.to raise_error(ArgumentError)
+      end
+    end
+  end
 end

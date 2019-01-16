@@ -73,6 +73,8 @@ module PhiAttrs
       #   Foo.allow_phi!('user@example.com', 'viewing patient record')
       #
       def allow_phi!(user_id = nil, reason = nil)
+        raise ArgumentError, 'block not allowed. use allow_phi with block' if block_given?
+
         user_id ||= current_user
         reason ||= i18n_reason
         raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
@@ -108,6 +110,8 @@ module PhiAttrs
       #   # PHI Access Disallowed
       #
       def allow_phi(user_id = nil, reason = nil, allow_only: nil)
+        raise ArgumentError, 'block required. use allow_phi! without block' unless block_given?
+
         if allow_only.present?
           raise ArgumentError, 'allow_only must be iterable with each' unless allow_only.respond_to?(:each)
           raise ArgumentError, "allow_only must all be `#{name}` objects" unless allow_only.all? { |t| t.is_a?(self) }
@@ -164,6 +168,8 @@ module PhiAttrs
       #   end
       #   # PHI Access Allowed Again
       def disallow_phi
+        raise ArgumentError, 'block required. use disallow_phi! without block' unless block_given?
+
         __phi_stack.push({
                            phi_access_allowed: false
                          })
@@ -179,6 +185,8 @@ module PhiAttrs
       #   Foo.disallow_phi!
       #
       def disallow_phi!
+        raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
+
         message = __phi_stack.present? ? "PHI access disabled for #{__user_id_string(__phi_stack)}" : 'PHI access disabled. No class level access was granted.'
 
         __reset_phi_stack
@@ -194,6 +202,8 @@ module PhiAttrs
       #   Foo.disallow_last_phi!
       #
       def disallow_last_phi!
+        raise ArgumentError, 'block not allowed' if block_given?
+
         removed_access = __phi_stack.pop
         message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
 
@@ -292,6 +302,8 @@ module PhiAttrs
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
     def allow_phi!(user_id = nil, reason = nil)
+      raise ArgumentError, 'block not allowed. use allow_phi with block' if block_given?
+
       user_id ||= self.class.current_user
       reason ||= self.class.i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
@@ -322,6 +334,8 @@ module PhiAttrs
     #   # PHI Access Disallowed Here
     #
     def allow_phi(user_id = nil, reason = nil)
+      raise ArgumentError, 'block required. use allow_phi! without block' unless block_given?
+
       extended_instances = @__phi_relations_extended.clone
       allow_phi!(user_id, reason)
 
@@ -339,6 +353,8 @@ module PhiAttrs
     #   foo.disallow_phi!
     #
     def disallow_phi!
+      raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
+
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         removed_access_for = self.class.__user_id_string(@__phi_access_stack)
 
@@ -365,6 +381,8 @@ module PhiAttrs
     #   # PHI Access Disallowed Here
     #
     def disallow_phi
+      raise ArgumentError, 'block required. use disallow_phi! without block' unless block_given?
+
       add_disallow_flag!
       add_disallow_flag_to_extended_phi!
 
@@ -381,6 +399,8 @@ module PhiAttrs
     #   foo.disallow_last_phi!
     #
     def disallow_last_phi!(preserve_extensions: false)
+      raise ArgumentError, 'block not allowed' if block_given?
+
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         removed_access = @__phi_access_stack.pop
 

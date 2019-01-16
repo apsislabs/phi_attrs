@@ -3,5 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 set -vx
 
+gem install bundler -v $BUNDLER_VERSION
+
 bundle check || bundle install
 bundle exec appraisal install

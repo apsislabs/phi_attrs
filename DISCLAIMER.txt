@@ -1,0 +1,15 @@
+DISCLAIMER
+==========
+
+While access logging is part of maintaining a HIPAA compliant application, there are many requirements for building a HIPAA secure application which are not addressed by `phi_attrs`, and as such use of `phi_attrs` on its own does not ensure HIPAA Compliance. As such, this software is provided on an "as-is" basis, and Apsis Labs, LLP makes no warranties or assurances with regards to the HIPAA compliance of any application which makes use of `phi_attrs`.
+
+For further reading on how to ensure your application meets the HIPAA security standards, review the HHS Security Series Technical Safeguards and the Summary of the HIPAA Security Rule, in addition to consulting your compliance and legal counsel. 
+
+Apsis Labs, LLP is not a law firm and does not provide legal advice. The information in this software does not constitute legal advice, nor does usage of this software create an attorney-client relationship.
+
+Apsis Labs, LLP is not a HIPAA covered entity, and usage of this software does not create a business associate relationship, nor does it enact a business associate agreement.
+
+---
+
+1. HHS Security Series Technical Safeguards: https://www.hhs.gov/sites/default/files/ocr/privacy/hipaa/administrative/securityrule/techsafeguards.pdf
+2. Summary of the HIPAA Security Rule: https://www.hhs.gov/hipaa/for-professionals/security/laws-regulations/index.html

@@ -439,6 +439,8 @@ Apsis Labs, LLP is not a law firm and does not provide legal advice. The informa
 
 Apsis Labs, LLP is not a HIPAA covered entity, and usage of this software does not create a business associate relationship, nor does it enact a business associate agreement.
 
+[Full Disclaimer](./DISCLAIMER.txt)
+
 ---
 
 # Built by Apsis

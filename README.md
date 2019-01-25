@@ -343,6 +343,14 @@ for your phi reasons your code will fail with an ArgumentError. To assist you in
 debugging PHI Attrs will print a `:warn` message with the expected location for
 the missing translation.
 
+If you would like to change from `phi` to a custom location you can set the path in your initializer.
+
+```ruby
+PhiAttrs.configure do |conf|
+  conf.translation_prefix = 'custom_prefix'
+end
+```
+
 ### Default User
 
 Passing around the current user can clutter your code. PHI Attrs allows you to

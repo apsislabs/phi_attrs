@@ -66,12 +66,13 @@ RSpec.describe 'class allow_phi' do
     it 'allow_phi persists extended phi after a reload' do |t|
       dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail, :all_random))
       expect { dumbledore.patient_detail.detail }.to raise_error(access_error)
-byebug
+
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect { dumbledore.patient_detail.detail }.not_to raise_error
         dumbledore.reload
         expect { dumbledore.patient_detail.detail }.not_to raise_error
       end
+
       expect { dumbledore.patient_detail.detail }.to raise_error(access_error)
     end
 
@@ -108,6 +109,23 @@ byebug
 
   context 'extended authorization' do
     let(:patient_mary) { create(:patient_info, :with_multiple_health_records) }
+
+    it 'extends access to associations' do |t|
+      expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
+
+      PatientInfo.allow_phi!(file_name, t.full_description)
+      expect { patient_mary.patient_detail.detail }.not_to raise_error
+    end
+
+    it 'extends access with a block' do |t|
+      expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
+
+      PatientInfo.allow_phi(file_name, t.full_description) do
+        expect { patient_mary.patient_detail.detail }.not_to raise_error
+      end
+
+      expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
+    end
 
     it 'does not revoke access for untouched associations' do |t|
       # Here we extend access to two different associations.

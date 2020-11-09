@@ -69,6 +69,24 @@ RSpec.describe 'instance allow_phi' do
         expect { patient_jane.allow_phi! '', 'ok' }.to raise_error(ArgumentError)
         expect { patient_jane.allow_phi! 'ok', 'ok' }.not_to raise_error
       end
+
+      it 'persists after a reload' do |t|
+        dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail))
+        dumbledore.allow_phi(file_name, t.full_description) do
+          expect { dumbledore.first_name }.not_to raise_error
+          dumbledore.reload
+          expect { dumbledore.first_name }.not_to raise_error
+        end
+      end
+
+      it 'persists extended phi after a reload' do |t|
+        dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail, :all_random))
+        dumbledore.allow_phi(file_name, t.full_description) do
+          expect { dumbledore.patient_detail.detail }.not_to raise_error
+          dumbledore.reload
+          expect { dumbledore.patient_detail.detail }.not_to raise_error
+        end
+      end
     end
 
     context 'collection' do

@@ -31,11 +31,11 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'rails', '>= 4.2.0'
   spec.add_runtime_dependency 'request_store', '~> 1.4'
 
-  spec.add_development_dependency 'appraisal', '~> 2.1'
+  spec.add_development_dependency 'appraisal'
   spec.add_development_dependency 'bundler', '~> 2.0'
   spec.add_development_dependency 'byebug'
   spec.add_development_dependency 'chandler'
-  spec.add_development_dependency 'combustion', '~> 0.9.1'
+  spec.add_development_dependency 'combustion'
   spec.add_development_dependency 'factory_bot_rails'
   spec.add_development_dependency 'faker'
   spec.add_development_dependency 'rake', '>= 12.3.3'
@@ -43,5 +43,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec-rails', '~> 3.7'
   spec.add_development_dependency 'rubocop'
   spec.add_development_dependency 'simplecov', '~> 0.16'
-  spec.add_development_dependency 'sqlite3', '~> 1.3', '< 1.4'
+  spec.add_development_dependency 'tzinfo-data'
 end

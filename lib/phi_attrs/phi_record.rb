@@ -17,6 +17,7 @@ module PhiAttrs
       class_attribute :__phi_methods_wrapped
       class_attribute :__phi_methods_to_extend
       class_attribute :__instances_with_extended_phi
+      class_attribute :__phi_reload_is_wrapped
 
       after_initialize :wrap_phi
 
@@ -24,6 +25,7 @@ module PhiAttrs
       self.__phi_methods_wrapped = []
       self.__phi_methods_to_extend = []
       self.__instances_with_extended_phi = Set.new
+      self.__phi_reload_is_wrapped = false
     end
 
     class_methods do
@@ -420,6 +422,11 @@ module PhiAttrs
     #
     def phi_allowed?
       !phi_context.nil? && phi_context[:phi_access_allowed]
+    end
+
+    def reload
+      @__phi_relations_extended.clear
+      super
     end
 
     protected

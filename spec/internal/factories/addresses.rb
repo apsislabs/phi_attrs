@@ -5,7 +5,7 @@ FactoryBot.define do
     address { '123 Little Whinging' }
 
     trait :all_random do
-      address { Faker::HarryPotter.location }
+      address { Faker::Movies::HarryPotter.location }
     end
   end
 end

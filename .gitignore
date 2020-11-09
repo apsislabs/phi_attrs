@@ -15,6 +15,7 @@
 *.sqlite3
 *.log
 .rspec_status
+gemfiles/*.gemfile.lock
 
 # Macs. Ugh.
 .DS_Store

@@ -5,7 +5,7 @@ FactoryBot.define do
     detail { 'Generic Spell' }
 
     trait :all_random do
-      detail { Faker::HarryPotter.spell }
+      detail { Faker::Movies::HarryPotter.spell }
     end
   end
 end

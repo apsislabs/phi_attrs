@@ -8,8 +8,8 @@ FactoryBot.define do
     association :patient_detail, factory: :patient_detail, strategy: :build
 
     trait :all_random do
-      first_name { Faker::HarryPotter.character }
-      last_name { Faker::HarryPotter.house }
+      first_name { Faker::Movies::HarryPotter.character }
+      last_name { Faker::Movies::HarryPotter.house }
 
       association :address, :all_random, factory: :address, strategy: :build
       association :patient_detail, :all_random, factory: :patient_detail, strategy: :build

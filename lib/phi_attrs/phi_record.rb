@@ -16,14 +16,12 @@ module PhiAttrs
       class_attribute :__phi_extend_methods
       class_attribute :__phi_methods_wrapped
       class_attribute :__phi_methods_to_extend
-      class_attribute :__instances_with_extended_phi
 
       after_initialize :wrap_phi
 
       # These have to default to an empty array
       self.__phi_methods_wrapped = []
       self.__phi_methods_to_extend = []
-      self.__instances_with_extended_phi = Set.new
     end
 
     class_methods do
@@ -223,6 +221,10 @@ module PhiAttrs
         __phi_stack.present? && __phi_stack[-1][:phi_access_allowed]
       end
 
+      def __instances_with_extended_phi
+        RequestStore.store[:phi_instances_with_extended_phi] ||= Set.new
+      end
+
       def __phi_stack
         RequestStore.store[:phi_access] ||= {}
         RequestStore.store[:phi_access][name] ||= []
@@ -420,6 +422,11 @@ module PhiAttrs
     #
     def phi_allowed?
       !phi_context.nil? && phi_context[:phi_access_allowed]
+    end
+
+    def reload
+      @__phi_relations_extended.clear
+      super
     end
 
     protected

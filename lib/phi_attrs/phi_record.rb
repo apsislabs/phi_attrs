@@ -412,6 +412,25 @@ module PhiAttrs
       end
     end
 
+
+    # The unique identifier for whom access has been allowed on this instance.
+    # This is what was passed in when PhiRecord#allow_phi! was called.
+    #
+    # @return [String] the user_id passed in to allow_phi!
+    #
+    def phi_allowed_by
+      phi_context[:user_id]
+    end
+
+    # The access reason for allowing access to this instance.
+    # This is what was passed in when PhiRecord#allow_phi! was called.
+    #
+    # @return [String] the reason passed in to allow_phi!
+    #
+    def phi_access_reason
+      phi_context[:reason]
+    end
+
     # Whether PHI access is allowed for a single instance of this class
     #
     # @example
@@ -477,28 +496,6 @@ module PhiAttrs
     def phi_log_keys
       @__phi_log_id = persisted? ? "Key: #{attributes[self.class.primary_key]}" : "Object: #{object_id}"
       @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, @__phi_log_id]
-    end
-
-    # The unique identifier for whom access has been allowed on this instance.
-    # This is what was passed in when PhiRecord#allow_phi! was called.
-    #
-    # @private
-    #
-    # @return [String] the user_id passed in to allow_phi!
-    #
-    def phi_allowed_by
-      phi_context[:user_id]
-    end
-
-    # The access reason for allowing access to this instance.
-    # This is what was passed in when PhiRecord#allow_phi! was called.
-    #
-    # @private
-    #
-    # @return [String] the reason passed in to allow_phi!
-    #
-    def phi_access_reason
-      phi_context[:reason]
     end
 
     def phi_context

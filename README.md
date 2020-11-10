@@ -1,4 +1,5 @@
-# phi_attrs [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Build Status](https://travis-ci.org/apsislabs/phi_attrs.svg?branch=master)](https://travis-ci.org/apsislabs/phi_attrs)
+# phi_attrs [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Spec CI](https://github.com/apsislabs/phi_attrs/workflows/Spec%20CI/badge.svg)](https://github.com/apsislabs/phi_attrs/actions)
+
 
 HIPAA compliant PHI access logging for Ruby on Rails.
 
@@ -412,6 +413,11 @@ Tests are written using [RSpec](http://rspec.info/) and are setup to use [Apprai
     or for individual tests:
     $ bin/ssh_to_container
     $ bundle exec appraisal rspec spec/path/to/spec.rb
+
+To run just a particular rails version:
+    $  bundle exec appraisal rails-5.1 rspec
+    $  bundle exec appraisal rails-5.2 rspec
+    $  bundle exec appraisal rails-6.0 rspec
 
 ### Console
 

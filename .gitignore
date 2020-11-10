@@ -12,6 +12,7 @@
 .byebug_history
 
 /test/sample/tmp/
+*.sqlite
 *.sqlite3
 *.log
 .rspec_status

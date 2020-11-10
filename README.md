@@ -414,6 +414,11 @@ Tests are written using [RSpec](http://rspec.info/) and are setup to use [Apprai
     $ bin/ssh_to_container
     $ bundle exec appraisal rspec spec/path/to/spec.rb
 
+To run just a particular rails version:
+    $  bundle exec appraisal rails-5.1 rspec
+    $  bundle exec appraisal rails-5.2 rspec
+    $  bundle exec appraisal rails-6.0 rspec
+
 ### Console
 
 An interactive prompt that will allow you to experiment with the gem.

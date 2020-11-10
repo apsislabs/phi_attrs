@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'combustion'
   spec.add_development_dependency 'factory_bot_rails'
   spec.add_development_dependency 'faker'
-  spec.add_development_dependency 'rake', '>= 12.3.3'
+  spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec', '~> 3.7'
   spec.add_development_dependency 'rspec-rails', '~> 3.7'
   spec.add_development_dependency 'rubocop'

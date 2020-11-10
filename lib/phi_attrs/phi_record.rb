@@ -125,7 +125,7 @@ module PhiAttrs
           allow_only.each { |t| t.allow_phi!(user_id, reason) }
         end
 
-        yield if block_given?
+        result = yield if block_given?
 
         __instances_with_extended_phi.each do |obj|
           if frozen_instances.include?(obj)
@@ -143,6 +143,8 @@ module PhiAttrs
           allow_only.each { |t| t.disallow_last_phi!(preserve_extensions: true) }
           # We've handled any newly extended allowances ourselves above
         end
+
+        result
       end
 
       # Explicitly disallow phi access in a specific area of code. This does not
@@ -341,11 +343,13 @@ module PhiAttrs
       extended_instances = @__phi_relations_extended.clone
       allow_phi!(user_id, reason)
 
-      yield if block_given?
+      result = yield if block_given?
 
       new_extensions = @__phi_relations_extended - extended_instances
       disallow_last_phi!(preserve_extensions: true)
       revoke_extended_phi!(new_extensions) if new_extensions.any?
+
+      result
     end
 
     # Revoke all PHI access for a single instance of this class.

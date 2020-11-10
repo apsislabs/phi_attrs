@@ -19,6 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           gem install bundler
+          bundle install
           bundle exec appraisal install
       - name: Run rspec
         run: bundler exec appraisal rspec

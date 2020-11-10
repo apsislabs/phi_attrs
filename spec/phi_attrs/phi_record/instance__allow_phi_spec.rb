@@ -119,8 +119,8 @@ RSpec.describe 'instance allow_phi' do
         expect { dumbledore.patient_detail.detail }.not_to raise_error
       end
 
-      it 'allow_phi with block returns value' do |t|
-        expect(patient_jane.allow_phi(file_name, t.full_description) { patient_jane.first_name }).to eq("Jane")
+      it 'get_phi with block returns value' do |t|
+        expect(patient_jane.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq("Jane")
       end
     end
 

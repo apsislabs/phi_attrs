@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: RVM ${{ matrix.rvm }}
+    name: RVM ${{ matrix.ruby }}
     strategy:
       matrix:
         ruby: [2.5, 2.6, 2.7]

@@ -1,4 +1,4 @@
-# phi_attrs [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) ![Spec CI](https://github.com/apsislabs/phi_attrs/workflows/Spec%20CI/badge.svg)
+# phi_attrs [![Gem Version](https://badge.fury.io/rb/phi_attrs.svg)](https://badge.fury.io/rb/phi_attrs) [![Spec CI](https://github.com/apsislabs/phi_attrs/workflows/Spec%20CI/badge.svg)](https://github.com/apsislabs/phi_attrs/actions)
 
 
 HIPAA compliant PHI access logging for Ruby on Rails.

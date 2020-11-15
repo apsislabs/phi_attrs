@@ -424,6 +424,18 @@ module PhiAttrs
       !phi_context.nil? && phi_context[:phi_access_allowed]
     end
 
+    # Require phi access. Raises an error pre-emptively if it has not been granted.
+    #
+    # @example
+    #   def use_phi(patient_record)
+    #     patient_record.require_phi!
+    #     # ...use PHI Freely
+    #   end
+    #
+    def require_phi!
+      raise PhiAccessException, 'PHI Access required, please call allow_phi or allow_phi! first' unless phi_allowed?
+    end
+
     def reload
       @__phi_relations_extended.clear
       super

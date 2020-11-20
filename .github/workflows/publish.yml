@@ -17,7 +17,7 @@ jobs:
           ruby-version: '2.6'
       - name: Install dependencies
         run: |
-          gem install bundler
+          gem install bundler:2.1.4
           bundle install
       - name: Release Gem
         if: contains(github.ref, 'refs/tags/v')

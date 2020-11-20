@@ -118,6 +118,10 @@ RSpec.describe 'instance allow_phi' do
         dumbledore.reload
         expect { dumbledore.patient_detail.detail }.not_to raise_error
       end
+
+      it 'get_phi with block returns value' do |t|
+        expect(patient_jane.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq("Jane")
+      end
     end
 
     context 'collection' do
@@ -312,6 +316,7 @@ RSpec.describe 'instance allow_phi' do
       it 'succeeds' do
         expect { patient_jane.allow_phi!('ok', 'ok') }.not_to raise_error
       end
+
       it 'raises ArgumentError with block' do
         expect { patient_jane.allow_phi!('ok', 'ok') {} }.to raise_error(ArgumentError)
       end

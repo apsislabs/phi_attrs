@@ -107,8 +107,32 @@ module PhiAttrs
       #   end
       #   # PHI Access Disallowed
       #
-      def allow_phi(user_id = nil, reason = nil, allow_only: nil)
-        raise ArgumentError, 'block required. use allow_phi! without block' unless block_given?
+      def allow_phi(user_id = nil, reason = nil, allow_only: nil, &block)
+        get_phi(user_id, reason, allow_only: allow_only, &block)
+        return
+      end
+
+
+      # Enable PHI access for any instance of this class in the block given only
+      # returning whatever the block returns.
+      #
+      # @param [String] user_id                       A unique identifier for the person accessing the PHI
+      # @param [String] reason                        The reason for accessing PHI
+      # @param [collection of PhiRecord] allow_only   Specific PhiRecords to allow access to
+      # &block [block]                                The block in which PHI access is allowed for the class
+      #
+      # @example
+      #   results = Foo.allow_phi('user@example.com', 'viewing patient record') do
+      #     Foo.search(params)
+      #   end
+      #
+      # @example
+      #   loaded_foo = Foo.allow_phi('user@example.com', 'exporting patient list', allow_only: list_of_foos) do
+      #     Bar.find_by(foo: list_of_foos).include(:foo)
+      #   end
+      #
+      def get_phi(user_id = nil, reason = nil, allow_only: nil)
+        raise ArgumentError, 'block required' unless block_given?
 
         if allow_only.present?
           raise ArgumentError, 'allow_only must be iterable with each' unless allow_only.respond_to?(:each)
@@ -125,7 +149,7 @@ module PhiAttrs
           allow_only.each { |t| t.allow_phi!(user_id, reason) }
         end
 
-        yield if block_given?
+        result = yield if block_given?
 
         __instances_with_extended_phi.each do |obj|
           if frozen_instances.include?(obj)
@@ -143,6 +167,8 @@ module PhiAttrs
           allow_only.each { |t| t.disallow_last_phi!(preserve_extensions: true) }
           # We've handled any newly extended allowances ourselves above
         end
+
+        result
       end
 
       # Explicitly disallow phi access in a specific area of code. This does not
@@ -335,17 +361,41 @@ module PhiAttrs
     #   end
     #   # PHI Access Disallowed Here
     #
-    def allow_phi(user_id = nil, reason = nil)
-      raise ArgumentError, 'block required. use allow_phi! without block' unless block_given?
+    def allow_phi(user_id = nil, reason = nil, &block)
+      get_phi(user_id, reason, &block)
+      return
+    end
+
+
+    # Enable PHI access for a single instance of this class inside the block.
+    # Returns whatever is returned from the block.
+    # Nested calls to get_phi will log once per nested call
+    #s
+    # @param [String] user_id   A unique identifier for the person accessing the PHI
+    # @param [String] reason    The reason for accessing PHI
+    # @yield                    The block in which phi access is allowed
+    #
+    # @return PHI
+    #
+    # @example
+    #   foo = Foo.find(1)
+    #   phi_data = foo.get_phi('user@example.com', 'viewing patient record') do
+    #    foo.phi_field
+    #   end
+    #
+    def get_phi(user_id = nil, reason = nil)
+      raise ArgumentError, 'block required' unless block_given?
 
       extended_instances = @__phi_relations_extended.clone
       allow_phi!(user_id, reason)
 
-      yield if block_given?
+      result = yield if block_given?
 
       new_extensions = @__phi_relations_extended - extended_instances
       disallow_last_phi!(preserve_extensions: true)
       revoke_extended_phi!(new_extensions) if new_extensions.any?
+
+      result
     end
 
     # Revoke all PHI access for a single instance of this class.

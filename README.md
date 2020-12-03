@@ -391,6 +391,27 @@ person_phi.allow_phi(nil, "Because I felt like looking at PHI") do
 end
 ```
 
+### Request UUID
+
+It can be helpful to include the Rails request UUID to match up your general application
+logs to your PHI access logs. The following snippet will prepend your PHI access logs
+with the request UUID.
+
+#### `app/controllers/application_controller.rb`
+
+```ruby
+around_action :tag_phi_log_with_request_id
+
+...
+
+private
+
+def tag_phi_log_with_request_id
+  PhiAttrs::Logger.logger.tagged("Request ID: #{request.uuid}") do
+    yield
+  end
+end
+```
 ## Best Practices
 
 * Mix and matching `instance`, `class` and `block` syntaxes for allowing/denying PHI is not recommended.

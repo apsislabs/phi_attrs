@@ -65,9 +65,6 @@ Rails/DynamicFindBy:
   Exclude:
     - 'spec/spec_helper.rb' # TODO: RUBOCOP Cleanup exclusion
 
-Style/BracesAroundHashParameters:
-  Enabled: false
-
 Style/ClassVars:
   Enabled: false
 

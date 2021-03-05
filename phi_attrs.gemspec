@@ -13,15 +13,15 @@ Gem::Specification.new do |spec|
   spec.summary       = 'PHI Access Restriction & Logging for Rails ActiveRecord'
   spec.homepage      = 'http://www.apsis.io'
   spec.license       = 'MIT'
-  spec.post_install_message = %q`
+  spec.post_install_message = '
     Thank you for installing phi_attrs! By installing this gem,
     you acknowledge and agree to the disclaimer as provided in the
     DISCLAIMER.txt file.
 
     For full details, see: https://github.com/apsislabs/phi_attrs/blob/master/DISCLAIMER.txt
-  `
+  '
 
-  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
+  spec.files = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
   end
   spec.bindir        = 'exe'
@@ -42,6 +42,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 3.7'
   spec.add_development_dependency 'rspec-rails', '~> 3.7'
   spec.add_development_dependency 'rubocop'
+  spec.add_development_dependency 'rubocop-rails'
   spec.add_development_dependency 'simplecov', '~> 0.16'
   spec.add_development_dependency 'tzinfo-data'
 end

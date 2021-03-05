@@ -1,6 +1,6 @@
 require 'rspec/expectations'
 
-DO_NOT_SPECIFY = "do not specify `allowed_by` or `with_access_reason` for negated `allow_phi_access`"
+DO_NOT_SPECIFY = 'do not specify `allowed_by` or `with_access_reason` for negated `allow_phi_access`'
 
 RSpec::Matchers.define :allow_phi_access do
   match do |result|

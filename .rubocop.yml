@@ -14,6 +14,12 @@ Documentation:
 Layout/IndentationWidth:
   Enabled: true
 
+Layout/LineLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+  Max: 140
+
 Lint/UnreachableCode:
   Exclude:
     - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
@@ -37,12 +43,6 @@ Metrics/ClassLength:
 Metrics/CyclomaticComplexity:
   Exclude:
    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
-
-Metrics/LineLength:
-  Exclude:
-    - 'spec/**/*'
-    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
-  Max: 140
 
 Metrics/MethodLength:
   Exclude:

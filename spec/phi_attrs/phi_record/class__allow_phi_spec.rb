@@ -107,7 +107,16 @@ RSpec.describe 'class allow_phi' do
     end
 
     it 'get_phi with block returns value' do |t|
-      expect(PatientInfo.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq("Jane")
+      expect(PatientInfo.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq('Jane')
+    end
+
+    it 'allow_phi with block returns value' do |t|
+      result = PatientInfo.allow_phi(file_name, t.full_description) do
+        patient_jane.first_name
+      end
+
+      expect(result).not_to be_nil
+      expect(result).to eq('Jane')
     end
   end
 

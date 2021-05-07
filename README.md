@@ -275,7 +275,7 @@ There is also a block syntax of `disallow_phi` for temporary suppression phi acc
 ```ruby
 patient = PatientInfo.find(params[:id])
 patient.allow_phi!('allowed_user@example.com', 'Display Patient Data')
-patient.diallow_phi do
+patient.disallow_phi do
   @data = patient.to_json # PHIAccessException
 end # Access is allowed again beyond this point
 ```
@@ -284,7 +284,7 @@ or a block level on a class:
 
 ```ruby
 PatientInfo.allow_phi!('allowed_user@example.com', 'Display Patient Data')
-PatientInfo.diallow_phi do
+PatientInfo.disallow_phi do
   @data = PatientInfo.find(params[:id]).to_json # PHIAccessException
 end # Access is allowed again beyond this point
 ```

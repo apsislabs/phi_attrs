@@ -7,7 +7,7 @@ module PhiAttrs
     class << self
       def logger
         unless @logger
-          logger = ActiveSupport::Logger.new(PhiAttrs.log_path)
+          logger = ActiveSupport::Logger.new(PhiAttrs.log_path, PhiAttrs.log_shift_age, PhiAttrs.log_shift_size)
           logger.formatter = Formatter.new
           @logger = ActiveSupport::TaggedLogging.new(logger)
         end

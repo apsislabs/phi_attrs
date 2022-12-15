@@ -39,7 +39,7 @@ Or install it yourself as:
 
 ## Initialize
 
-Create an initializer to configure the PHI log file location.
+Create an initializer to configure the PHI log file location. Log rotation can be configured with log_shift_age and log_shift_size (disabled by default).
 
 Example:
 
@@ -48,6 +48,8 @@ Example:
 ```ruby
 PhiAttrs.configure do |conf|
   conf.log_path = Rails.root.join("log", "phi_access_#{Rails.env}.log")
+  conf.log_shift_age  = 10            # how many logs to keep of `log_shift_size` or frequency to rotate ('daily', 'weekly' or 'monthly'). Disable rotation with 0 (default).
+  conf.log_shift_size = 100.megabytes # size in bytes when using `log_shift_age` as a number
 end
 ```
 

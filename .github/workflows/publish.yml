@@ -11,14 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-ruby@v1
+      - uses: actions/checkout@v3
+      - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '2.6'
-      - name: Install dependencies
-        run: |
-          gem install bundler:2.1.4
-          bundle install
+          bundler-cache: true
       - name: Release Gem
         if: contains(github.ref, 'refs/tags/v')
         uses: cadwallion/publish-rubygems-action@master

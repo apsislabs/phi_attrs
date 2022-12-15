@@ -2,6 +2,8 @@
 
 module PhiAttrs
   @@log_path = nil
+  @@log_shift_age = 0 # Default to disabled
+  @@log_shift_size = 1048576 # 1MB - Default from logger class
   @@current_user_method = nil
   @@translation_prefix = 'phi'
 
@@ -15,6 +17,22 @@ module PhiAttrs
 
   def self.log_path=(value)
     @@log_path = value
+  end
+
+  def self.log_shift_age
+    @@log_shift_age
+  end
+
+  def self.log_shift_age=(value)
+    @@log_shift_age = value
+  end
+
+  def self.log_shift_size
+    @@log_shift_size
+  end
+
+  def self.log_shift_size=(value)
+    @@log_shift_size = value
   end
 
   def self.translation_prefix

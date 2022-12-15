@@ -3,16 +3,22 @@
 RSpec.describe 'configure' do
   orig_method = nil
   orig_path = nil
+  orig_age = nil
+  orig_size = nil
   orig_prefix = nil
 
   before :all do
     orig_method = PhiAttrs.current_user_method
     orig_path = PhiAttrs.log_path
+    orig_age = PhiAttrs.log_shift_age
+    orig_size = PhiAttrs.log_shift_size
     orig_prefix = PhiAttrs.translation_prefix
 
     PhiAttrs.configure do |c|
       c.current_user_method = nil
       c.log_path = nil
+      c.log_shift_age = nil
+      c.log_shift_size = nil
       c.translation_prefix = nil
     end
   end
@@ -21,6 +27,8 @@ RSpec.describe 'configure' do
     PhiAttrs.configure do |c|
       c.current_user_method = orig_method
       c.log_path = orig_path
+      c.log_shift_age = orig_age
+      c.log_shift_size = orig_size
       c.translation_prefix = orig_prefix
     end
   end
@@ -44,6 +52,28 @@ RSpec.describe 'configure' do
     it 'can be set' do
       PhiAttrs.configure { |c| c.log_path = 'deep_path' }
       expect(log_path).to be('deep_path')
+    end
+  end
+
+  context 'log_age' do
+    subject(:log_shift_age) { PhiAttrs.log_shift_age }
+
+    it { is_expected.to be_nil }
+
+    it 'can be set' do
+      PhiAttrs.configure { |c| c.log_shift_age = 7 }
+      expect(log_shift_age).to be(7)
+    end
+  end
+
+  context 'log_size' do
+    subject(:log_shift_size) { PhiAttrs.log_shift_size }
+
+    it { is_expected.to be_nil }
+
+    it 'can be set' do
+      PhiAttrs.configure { |c| c.log_shift_size = 100.megabytes }
+      expect(log_shift_size).to be(100.megabytes)
     end
   end
 

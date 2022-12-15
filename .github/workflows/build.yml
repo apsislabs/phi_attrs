@@ -13,13 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Ruby ${{ matrix.ruby }}
-        uses: actions/setup-ruby@v1
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
       - name: Install dependencies
         run: |
-          gem install bundler
-          bundle install
           bundle exec appraisal install
       - name: Run rspec
         run: bundler exec appraisal rspec

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class SampleController < ActionController::Base; end
+class SampleController < ApplicationController; end
 
 RSpec.describe 'i18n in controller', type: :controller do
   controller SampleController do

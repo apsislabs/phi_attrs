@@ -321,7 +321,7 @@ module Admin
 
     def leviosa
       patient_info.allow_phi(current_user) do
-        # reason tries to use `phi.admin.patient_dashbaord.expelliarmus.patient_info`
+        # reason tries to use `phi.admin.patient_dashbaord.leviosa.patient_info`
       end
     end
   end
@@ -484,4 +484,4 @@ Apsis Labs, LLP is not a HIPAA covered entity, and usage of this software does n
 
 [![apsis](https://s3-us-west-2.amazonaws.com/apsiscdn/apsis.png)](https://www.apsis.io)
 
-`phi_attrs` was built by Apsis Labs. We love sharing what we build! Check out our [other libraries on Github](https://github.com/apsislabs), and if you like our work you can [hire us](https://www.apsis.io/work-with-us/) to build your vision.
+`phi_attrs` was built by Apsis Labs. We love sharing what we build! Check out our [other libraries on Github](https://github.com/apsislabs), and if you like our work you can [hire us](https://www.apsis.io) to build your vision.

@@ -7,7 +7,7 @@ services:
       - bundle_cache:/bundle
       - .:/app
     environment:
-      - BUNDLER_VERSION=2.1.4
+      - BUNDLER_VERSION=2.4.0
       - BUNDLE_JOBS=5
       - BUNDLE_PATH=/bundle
       - BUNDLE_BIN=/bundle/bin

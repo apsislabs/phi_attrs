@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'request_store', '~> 1.4'
 
   spec.add_development_dependency 'appraisal'
-  spec.add_development_dependency 'bundler', '>= 2.4.0'
+  spec.add_development_dependency 'bundler', '>= 2.3.26'
   spec.add_development_dependency 'byebug'
   spec.add_development_dependency 'chandler'
   spec.add_development_dependency 'combustion'

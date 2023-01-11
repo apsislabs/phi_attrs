@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     For full details, see: https://github.com/apsislabs/phi_attrs/blob/master/DISCLAIMER.txt
   '
 
-  spec.required_ruby_version = '>= 2.5.3'
+  spec.required_ruby_version = '>= 2.7.0'
 
   spec.files = `git ls-files -z`.split("\x0").reject do |f|
     f.match(%r{^(test|spec|features)/})
@@ -30,11 +30,11 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_runtime_dependency 'rails', '>= 4.2.0'
+  spec.add_runtime_dependency 'rails', '>= 6.0.0'
   spec.add_runtime_dependency 'request_store', '~> 1.4'
 
   spec.add_development_dependency 'appraisal'
-  spec.add_development_dependency 'bundler', '~> 2.4'
+  spec.add_development_dependency 'bundler', '>= 2.4.0'
   spec.add_development_dependency 'byebug'
   spec.add_development_dependency 'chandler'
   spec.add_development_dependency 'combustion'

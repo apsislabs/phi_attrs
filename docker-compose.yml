@@ -1,7 +1,25 @@
 version: '3'
 
 services:
-  rails:
+  ruby2:
+    build:
+      context: .
+      args:
+        - RUBY_VERSION=2.7.0
+        - ALPINE_VERSION=3.11
+    volumes:
+      - bundle_cache:/bundle
+      - .:/app
+    environment:
+      - BUNDLER_VERSION=2.4.0
+      - BUNDLE_JOBS=5
+      - BUNDLE_PATH=/bundle
+      - BUNDLE_BIN=/bundle/bin
+      - GEM_HOME=/bundle
+      - DOCKER_CONTAINER=1
+    command:
+      - docker/start.sh
+  ruby3:
     build: .
     volumes:
       - bundle_cache:/bundle

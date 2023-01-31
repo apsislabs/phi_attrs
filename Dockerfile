@@ -1,5 +1,7 @@
-FROM ruby:3.0.5-alpine3.16
-MAINTAINER wyatt@apsis.io
+ARG RUBY_VERSION=3.1.3
+ARG ALPINE_VERSION=3.17
+
+FROM ruby:${RUBY_VERSION}-alpine${ALPINE_VERSION}
 
 RUN apk add --no-cache --update \
     bash \

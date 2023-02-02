@@ -14,4 +14,5 @@ namespace :dummy do
   Dummy::Application.load_tasks
 end
 
-task default: :spec
+task run_specs: ['dummy:db:create', 'dummy:db:migrate', 'spec']
+task default: :run_specs

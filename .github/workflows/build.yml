@@ -23,4 +23,5 @@ jobs:
         run: |
           bundle exec appraisal install
       - name: Run rspec
-        run: bundler exec appraisal rspec
+        run: |
+          bundler exec appraisal rake run_specs

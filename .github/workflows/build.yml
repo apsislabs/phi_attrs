@@ -24,4 +24,4 @@ jobs:
           bundle exec appraisal install
       - name: Run rspec
         run: |
-          bundler exec appraisal rake run_specs
+          bundle exec appraisal "rake dummy:db:create dummy:db:migrate && rspec"

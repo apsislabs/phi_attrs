@@ -1,15 +1,20 @@
-FROM ruby:2.5.3-alpine3.8
-MAINTAINER wyatt@apsis.io
+ARG RUBY_VERSION=3.1.3
 
-RUN apk add --no-cache --update \
-    bash \
-    alpine-sdk \
-    sqlite-dev
+FROM ruby:${RUBY_VERSION}-buster
+
+RUN apt-get update -qq && apt-get install -y --no-install-recommends \
+  build-essential \
+  git \
+  bash \
+  sqlite3
 
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 
 COPY . $APP_HOME/
+
+RUN gem update --system
+RUN bundle config set force_ruby_platform true
 
 EXPOSE 3000
 

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 RSpec.describe 'instance allow_phi' do
   file_name = __FILE__
 
@@ -120,7 +122,7 @@ RSpec.describe 'instance allow_phi' do
       end
 
       it 'get_phi with block returns value' do |t|
-        expect(patient_jane.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq("Jane")
+        expect(patient_jane.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq('Jane')
       end
     end
 
@@ -318,13 +320,13 @@ RSpec.describe 'instance allow_phi' do
       end
 
       it 'raises ArgumentError with block' do
-        expect { patient_jane.allow_phi!('ok', 'ok') {} }.to raise_error(ArgumentError)
+        expect { patient_jane.allow_phi!('ok', 'ok') { do_nothing } }.to raise_error(ArgumentError)
       end
     end
 
     context 'allow_phi!' do
       it 'succeeds' do
-        expect { patient_jane.allow_phi('ok', 'ok') {} }.not_to raise_error
+        expect { patient_jane.allow_phi('ok', 'ok') { do_nothing } }.not_to raise_error
       end
       it 'raises ArgumentError for allow_phi! without block' do
         expect { patient_jane.allow_phi('ok', 'ok') }.to raise_error(ArgumentError)

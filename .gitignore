@@ -11,7 +11,8 @@
 *Gemfile.lock
 .byebug_history
 
-/test/sample/tmp/
+/spec/dummy/tmp/
+/spec/dummy/db/schema.rb
 *.sqlite
 *.sqlite3
 *.log

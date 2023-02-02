@@ -1,3 +1,5 @@
+require: rubocop-rails
+
 Rails:
   Enabled: true
 
@@ -6,13 +8,17 @@ AllCops:
     - 'bin/**/*'
     - 'gemfiles/**/*'
     - 'spec/internal/db/schema.rb'
-  TargetRubyVersion: 2.5
-
-Documentation:
-  Enabled: false
+  NewCops: enable
+  TargetRubyVersion: 2.7
 
 Layout/IndentationWidth:
   Enabled: true
+
+Layout/LineLength:
+  Exclude:
+    - 'spec/**/*'
+    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
+  Max: 140
 
 Lint/UnreachableCode:
   Exclude:
@@ -38,12 +44,6 @@ Metrics/CyclomaticComplexity:
   Exclude:
    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
 
-Metrics/LineLength:
-  Exclude:
-    - 'spec/**/*'
-    - 'lib/phi_attrs/phi_record.rb' # TODO: RUBOCOP Cleanup exclusion
-  Max: 140
-
 Metrics/MethodLength:
   Exclude:
     - 'spec/**/*'
@@ -65,8 +65,8 @@ Rails/DynamicFindBy:
   Exclude:
     - 'spec/spec_helper.rb' # TODO: RUBOCOP Cleanup exclusion
 
-Style/BracesAroundHashParameters:
-  Enabled: false
+# Style/BracesAroundHashParameters:
+#   Enabled: false
 
 Style/ClassVars:
   Enabled: false
@@ -76,6 +76,9 @@ Style/CommentedKeyword:
     - 'spec/**/*'
 
 Style/ConditionalAssignment:
+  Enabled: false
+
+Style/Documentation:
   Enabled: false
 
 Style/EmptyMethod:

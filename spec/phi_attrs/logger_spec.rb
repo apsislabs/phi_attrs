@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 RSpec.describe Logger do
   file_name = __FILE__
 
@@ -128,9 +130,9 @@ RSpec.describe Logger do
       end
 
       it 'multiple times for nested allows and disallows' do |t|
-        PatientInfo.allow_phi!(file_name + '1', t.full_description)
-        PatientInfo.allow_phi!(file_name + '2', t.full_description)
-        PatientInfo.allow_phi!(file_name + '3', t.full_description)
+        PatientInfo.allow_phi!("#{file_name}1", t.full_description)
+        PatientInfo.allow_phi!("#{file_name}2", t.full_description)
+        PatientInfo.allow_phi!("#{file_name}3", t.full_description)
 
         expect(PhiAttrs::Logger.logger).to receive(:info).exactly(1).ordered
         patient_jane.first_name

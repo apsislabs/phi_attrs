@@ -112,7 +112,6 @@ module PhiAttrs
         return
       end
 
-
       # Enable PHI access for any instance of this class in the block given only
       # returning whatever the block returns.
       #
@@ -141,7 +140,7 @@ module PhiAttrs
         end
 
         # Save this so we don't revoke access previously extended outside the block
-        frozen_instances = Hash[__instances_with_extended_phi.map { |obj| [obj, obj.instance_variable_get(:@__phi_relations_extended).clone] }]
+        frozen_instances = __instances_with_extended_phi.index_with { |obj| obj.instance_variable_get(:@__phi_relations_extended).clone }
 
         if allow_only.nil?
           allow_phi!(user_id, reason)
@@ -366,11 +365,10 @@ module PhiAttrs
       return
     end
 
-
     # Enable PHI access for a single instance of this class inside the block.
     # Returns whatever is returned from the block.
     # Nested calls to get_phi will log once per nested call
-    #s
+    # s
     # @param [String] user_id   A unique identifier for the person accessing the PHI
     # @param [String] reason    The reason for accessing PHI
     # @yield                    The block in which phi access is allowed
@@ -461,7 +459,6 @@ module PhiAttrs
         PhiAttrs::Logger.info(message)
       end
     end
-
 
     # The unique identifier for whom access has been allowed on this instance.
     # This is what was passed in when PhiRecord#allow_phi! was called.
@@ -632,16 +629,18 @@ module PhiAttrs
       wrapped_method = :"__#{method_name}_phi_wrapped"
       unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
-      self.class.send(:define_method, wrapped_method) do |*args, &block|
+      self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
         PhiAttrs::Logger.tagged(*phi_log_keys) do
-          raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}" unless phi_allowed?
+          unless phi_allowed?
+            raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}"
+          end
 
           unless all_phi_context_logged?
             PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
             set_all_phi_context_logged
           end
 
-          send(unwrapped_method, *args, &block)
+          send(unwrapped_method, *args, **kwargs, &block)
         end
       end
 
@@ -665,18 +664,16 @@ module PhiAttrs
       wrapped_method = wrapped_extended_name(method_name)
       unwrapped_method = unwrapped_extended_name(method_name)
 
-      self.class.send(:define_method, wrapped_method) do |*args, &block|
-        relation = send(unwrapped_method, *args, &block)
+      self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
+        relation = send(unwrapped_method, *args, **kwargs, &block)
 
-        if phi_allowed?
-          if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
-            relations = relation.is_a?(Enumerable) ? relation : [relation]
-            relations.each do |r|
-              r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
-            end
-            @__phi_relations_extended.merge(relations)
-            self.class.__instances_with_extended_phi.add(self)
+        if phi_allowed? && (relation.present? && relation_klass(relation).included_modules.include?(PhiRecord))
+          relations = relation.is_a?(Enumerable) ? relation : [relation]
+          relations.each do |r|
+            r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
           end
+          @__phi_relations_extended.merge(relations)
+          self.class.__instances_with_extended_phi.add(self)
         end
 
         relation

@@ -3,7 +3,7 @@
 module PhiAttrs
   @@log_path = nil
   @@log_shift_age = 0 # Default to disabled
-  @@log_shift_size = 1048576 # 1MB - Default from logger class
+  @@log_shift_size = 1_048_576 # 1MB - Default from logger class
   @@current_user_method = nil
   @@translation_prefix = 'phi'
 

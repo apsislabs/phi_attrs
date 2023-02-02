@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 module Namespace
-  class NestedController < ActionController::Base; end
+  class NestedController < ApplicationController; end
 end
 
 RSpec.describe 'i18n in controller', type: :controller do

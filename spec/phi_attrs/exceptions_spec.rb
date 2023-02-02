@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 RSpec.describe 'exceptions' do
   let(:patient_john) { build(:patient_info, first_name: 'John') }
 

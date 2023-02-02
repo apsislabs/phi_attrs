@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 RSpec.describe 'instance disallow_phi' do
   file_name = __FILE__
 
@@ -49,9 +51,9 @@ RSpec.describe 'instance disallow_phi' do
 
   context 'disallow_phi!' do
     it 'disallows whole stack' do |t|
-      patient_john.allow_phi!(file_name + '1', t.full_description)
+      patient_john.allow_phi!("#{file_name}1", t.full_description)
       expect { patient_john.first_name }.not_to raise_error
-      patient_john.allow_phi!(file_name + '2', t.full_description)
+      patient_john.allow_phi!("#{file_name}2", t.full_description)
       expect { patient_john.first_name }.not_to raise_error
       patient_john.disallow_phi!
       expect { patient_john.first_name }.to raise_error(access_error)
@@ -60,23 +62,23 @@ RSpec.describe 'instance disallow_phi' do
     it 'disallows does not affect Class allows' do |t|
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { patient_john.first_name }.not_to raise_error
-      patient_john.allow_phi!(file_name + '2', t.full_description)
+      patient_john.allow_phi!("#{file_name}2", t.full_description)
       expect { patient_john.first_name }.not_to raise_error
       patient_john.disallow_phi!
       expect { patient_john.first_name }.not_to raise_error
     end
 
     it 'allows access after disallow' do |t|
-      patient_john.allow_phi!(file_name + '1', t.full_description)
+      patient_john.allow_phi!("#{file_name}1", t.full_description)
       expect { patient_john.first_name }.not_to raise_error
       patient_john.disallow_phi!
       expect { patient_john.first_name }.to raise_error(access_error)
-      patient_john.allow_phi!(file_name + '2', t.full_description)
+      patient_john.allow_phi!("#{file_name}2", t.full_description)
       expect { patient_john.first_name }.not_to raise_error
     end
 
     it 'raises ArgumentError with block' do
-      expect { patient_john.disallow_phi! {} }.to raise_error(ArgumentError)
+      expect { patient_john.disallow_phi! { do_nothing } }.to raise_error(ArgumentError)
     end
   end
 end

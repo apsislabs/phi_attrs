@@ -3,17 +3,19 @@
 require 'simplecov'
 SimpleCov.start
 
-require 'bundler/setup'
+require 'rails/all'
+require 'dummy/application'
+
+require 'byebug'
+require 'rspec/rails'
 require 'factory_bot_rails'
 require 'faker'
 require 'phi_attrs'
 
-Bundler.require :default, :development
-Combustion.initialize! :all
-require 'rspec/rails'
+Dummy::Application.initialize!
 
 # Adds all support files
-Dir[File.join(Gem::Specification.find_by_name('phi_attrs').gem_dir.to_s, 'spec', 'support', '**', '*.rb')].each { |f| require f }
+Dir[File.join(Gem::Specification.find_by_name('phi_attrs').gem_dir.to_s, 'spec', 'support', '**', '*.rb')].sort.each { |f| require f }
 
 RSpec.configure do |config|
   config.use_transactional_fixtures = true

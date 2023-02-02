@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 source bin/helpers/docker
-runOnDocker rails
+runOnDocker ruby3
 
 echo "== Starting unit tests =="
 bundle exec appraisal rspec

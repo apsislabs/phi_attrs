@@ -6,7 +6,6 @@ services:
       context: .
       args:
         - RUBY_VERSION=2.7.0
-        - ALPINE_VERSION=3.11
     volumes:
       - bundle_cache:/bundle
       - .:/app

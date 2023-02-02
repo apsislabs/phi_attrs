@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 RSpec.describe 'class phi_allowed?' do
   file_name = __FILE__
   let(:patient_jane) { build(:patient_info, first_name: 'Jane') }

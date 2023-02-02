@@ -36,8 +36,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'appraisal'
   spec.add_development_dependency 'bundler', '>= 2.2.33'
   spec.add_development_dependency 'byebug'
-  spec.add_development_dependency 'chandler'
-  spec.add_development_dependency 'combustion'
   spec.add_development_dependency 'factory_bot_rails'
   spec.add_development_dependency 'faker'
   spec.add_development_dependency 'rake'

@@ -1,19 +1,17 @@
 # frozen_string_literal: true
 
+require 'rubygems'
+require 'bundler/setup'
 require 'bundler/gem_tasks'
+
+require 'rake'
 require 'rspec/core/rake_task'
 
 RSpec::Core::RakeTask.new(:spec)
 
-# Set Chandler options
-if defined? Chandler
-  Chandler::Tasks.configure do |config|
-    config.changelog_path = 'CHANGELOG.md'
-    config.github_repository = 'apsislabs/phi_attrs'
-  end
-
-  # Add chandler as a prerequisite for `rake release`
-  task 'release:rubygem_push' => 'chandler:push'
+namespace :dummy do
+  require_relative 'spec/dummy/application'
+  Dummy::Application.load_tasks
 end
 
 task default: :spec

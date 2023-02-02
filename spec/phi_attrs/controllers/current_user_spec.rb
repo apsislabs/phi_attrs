@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper'
+
 class SampleController < ApplicationController; end
 
 RSpec.describe 'default user', type: :controller do

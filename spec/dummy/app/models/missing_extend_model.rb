@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class MissingAttributeModel < ApplicationRecord
+class MissingExtendModel < ApplicationRecord
   phi_model
-  phi_include_methods :non_existent_method
+  extend_phi_access :non_existent_model
 end

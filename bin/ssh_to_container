@@ -5,4 +5,4 @@ if [[ -z $CONTAINER ]]; then
   CONTAINER='ruby3'
 fi
 
-docker-compose run $CONTAINER sh
+docker-compose run $CONTAINER bash

@@ -60,12 +60,6 @@ module PhiAttrs
       #
       def extend_phi_access(*methods)
         self.__phi_extend_methods = methods.map(&:to_s)
-        validate_extended_methods_exist
-      end
-
-      def validate_extended_methods_exist
-        undefined_methods = self.__phi_extend_methods.reject{|m| self.class.respond_to?(m)}
-        raise NameError, "Undefined methods in `extend_phi_access`: #{undefined_methods.join(' ')}" if undefined_methods.any?
       end
 
       # Enable PHI access for any instance of this class.
@@ -669,6 +663,7 @@ module PhiAttrs
     # @private
     #
     def phi_wrap_extension(method_name)
+      raise NameError, "Undefined methods in `extend_phi_access`: #{method_name}" unless self.respond_to?(method_name)
       return if self.class.__phi_methods_to_extend.include? method_name
 
       wrapped_method = wrapped_extended_name(method_name)

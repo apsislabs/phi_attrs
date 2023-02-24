@@ -64,7 +64,7 @@ module PhiAttrs
       end
 
       def validate_extended_methods_exist
-        undefined_methods = self.__phi_extend_methods.reject{|m| self.respond_to?(m)}
+        undefined_methods = self.__phi_extend_methods.reject{|m| self.class.respond_to?(m)}
         raise NameError, "Undefined methods in `extend_phi_access`: #{undefined_methods.join(' ')}" if undefined_methods.any?
       end
 

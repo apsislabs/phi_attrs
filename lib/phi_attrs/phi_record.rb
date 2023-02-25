@@ -624,7 +624,7 @@ module PhiAttrs
     #   # through access logging.
     #
     def phi_wrap_method(method_name)
-      unless self.respond_to?(method_name)
+      unless respond_to?(method_name)
         PhiAttrs::Logger.warn("#{self.class.name} tried to wrap non-existant method (#{method_name})")
         return
       end
@@ -663,7 +663,7 @@ module PhiAttrs
     # @private
     #
     def phi_wrap_extension(method_name)
-      raise NameError, "Undefined relationship in `extend_phi_access`: #{method_name}" unless self.respond_to?(method_name)
+      raise NameError, "Undefined relationship in `extend_phi_access`: #{method_name}" unless respond_to?(method_name)
       return if self.class.__phi_methods_to_extend.include? method_name
 
       wrapped_method = wrapped_extended_name(method_name)

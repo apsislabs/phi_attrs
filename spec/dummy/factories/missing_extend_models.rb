@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :missing_extend_model do
-  end
+  factory :missing_extend_model
 end

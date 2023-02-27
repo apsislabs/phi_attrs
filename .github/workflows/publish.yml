@@ -18,8 +18,21 @@ jobs:
           bundler-cache: true
       - name: Release Gem
         if: contains(github.ref, 'refs/tags/v')
-        uses: cadwallion/publish-rubygems-action@master
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           RUBYGEMS_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
-          RELEASE_COMMAND: bundle exec rake release
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          echo "Setting up gem credentials..."
+          mkdir -p ~/.gem
+
+          cat << EOF > ~/.gem/credentials
+          ---
+          :rubygems_api_key: ${RUBYGEMS_API_KEY}
+          EOF
+
+          chmod 0600 ~/.gem/credentials
+
+          bundle exec rake build
+
+          echo "Running gem release task..."
+          gem push pkg/phi_attrs-${TAG#v}.gem

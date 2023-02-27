@@ -7,7 +7,7 @@ services:
       args:
         - RUBY_VERSION=2.7.0
     volumes:
-      - bundle_cache:/bundle
+      - bundle_cache_2:/bundle
       - .:/app
     environment:
       - BUNDLER_VERSION=2.2.33
@@ -21,7 +21,7 @@ services:
   ruby3:
     build: .
     volumes:
-      - bundle_cache:/bundle
+      - bundle_cache_3:/bundle
       - .:/app
     environment:
       - BUNDLER_VERSION=2.4.0
@@ -34,4 +34,5 @@ services:
       - docker/start.sh
 
 volumes:
-  bundle_cache:
+  bundle_cache_2:
+  bundle_cache_3:

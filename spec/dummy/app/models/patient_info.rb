@@ -7,7 +7,7 @@ class PatientInfo < ApplicationRecord
 
   phi_model
 
-  extend_phi_access :patient_detail, :health_records
+  extend_phi_access :patient_detail, :health_records, :patient_details
 
   exclude_from_phi :last_name
   include_in_phi :birthday
@@ -30,5 +30,9 @@ class PatientInfo < ApplicationRecord
       health_record_count: health_records.count
     }
     summary_json.merge(extra)
+  end
+
+  def patient_details
+    patient_detail&.detail
   end
 end

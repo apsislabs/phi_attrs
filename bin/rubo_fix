@@ -3,4 +3,4 @@ source bin/helpers/docker
 runOnDocker ruby3
 
 echo "== Starting rubocop =="
-bundle exec rubocop --format worst --format simple --format offenses --auto-correct
+bundle exec rubocop --format worst --format simple --format offenses --autocorrect

@@ -142,32 +142,32 @@ module PhiAttrs
         # Save this so we don't revoke access previously extended outside the block
         frozen_instances = __instances_with_extended_phi.index_with { |obj| obj.instance_variable_get(:@__phi_relations_extended).clone }
 
-        if allow_only.nil?
-          allow_phi!(user_id, reason)
-        else
-          allow_only.each { |t| t.allow_phi!(user_id, reason) }
-        end
-
-        result = yield if block_given?
-
-        __instances_with_extended_phi.each do |obj|
-          if frozen_instances.include?(obj)
-            old_extensions = frozen_instances[obj]
-            new_extensions = obj.instance_variable_get(:@__phi_relations_extended) - old_extensions
-            obj.send(:revoke_extended_phi!, new_extensions) if new_extensions.any?
+        begin
+          if allow_only.nil?
+            allow_phi!(user_id, reason)
           else
-            obj.send(:revoke_extended_phi!) # Instance is new to the set, so revoke everything
+            allow_only.each { |t| t.allow_phi!(user_id, reason) }
+          end
+
+          return yield if block_given?
+        ensure
+          __instances_with_extended_phi.each do |obj|
+            if frozen_instances.include?(obj)
+              old_extensions = frozen_instances[obj]
+              new_extensions = obj.instance_variable_get(:@__phi_relations_extended) - old_extensions
+              obj.send(:revoke_extended_phi!, new_extensions) if new_extensions.any?
+            else
+              obj.send(:revoke_extended_phi!) # Instance is new to the set, so revoke everything
+            end
+          end
+
+          if allow_only.nil?
+            disallow_last_phi!
+          else
+            allow_only.each { |t| t.disallow_last_phi!(preserve_extensions: true) }
+            # We've handled any newly extended allowances ourselves above
           end
         end
-
-        if allow_only.nil?
-          disallow_last_phi!
-        else
-          allow_only.each { |t| t.disallow_last_phi!(preserve_extensions: true) }
-          # We've handled any newly extended allowances ourselves above
-        end
-
-        result
       end
 
       # Explicitly disallow phi access in a specific area of code. This does not

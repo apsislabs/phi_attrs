@@ -124,6 +124,17 @@ RSpec.describe 'instance allow_phi' do
       it 'get_phi with block returns value' do |t|
         expect(patient_jane.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq('Jane')
       end
+
+      it 'does not leak phi allowance if get_phi returns' do |t|
+        def name_getter
+          patient_jane.get_phi(file_name, t.full_description) { return patient_jane.first_name }
+        end
+
+        expect(patient_jane.phi_allowed?).to be false
+        first_name = name_getter
+        expect(first_name).to eq('Jane')
+        expect(patient_jane.phi_allowed?).to be false
+      end
     end
 
     context 'collection' do

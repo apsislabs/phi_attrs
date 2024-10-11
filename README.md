@@ -465,6 +465,13 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/apsisl
 
 Any PRs should be accompanied with documentation in `README.md`.
 
+### Releasing
+
+* Squash and merge your PR, including a bump to `lib/phi_attrs/version.rb`
+* Draft a new release, creating a new tag with the new version number from `version.rb`, i.e. `v0.3.2`
+* Auto-generate release notes, add any context if necessary
+* Publish release; release will be automatically built and published to rubygems
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).

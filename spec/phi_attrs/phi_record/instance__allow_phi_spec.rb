@@ -126,12 +126,12 @@ RSpec.describe 'instance allow_phi' do
       end
 
       it 'does not leak phi allowance if get_phi returns' do |t|
-        def name_getter
-          patient_jane.get_phi(file_name, t.full_description) { return patient_jane.first_name }
+        def name_getter(reason, description)
+          patient_jane.get_phi(reason, description) { return patient_jane.first_name }
         end
 
         expect(patient_jane.phi_allowed?).to be false
-        first_name = name_getter
+        first_name = name_getter(file_name, t.full_description)
         expect(first_name).to eq('Jane')
         expect(patient_jane.phi_allowed?).to be false
       end

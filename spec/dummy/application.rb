@@ -25,8 +25,6 @@ module Dummy
 
     if Rails.version.match?(/^6.0/)
       config.active_record.sqlite3.represent_boolean_as_integer = true
-    else
-      config.active_record.legacy_connection_handling = false
     end
 
     def require_environment!

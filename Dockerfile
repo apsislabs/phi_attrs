@@ -14,7 +14,6 @@ WORKDIR $APP_HOME
 COPY . $APP_HOME/
 
 RUN gem update --system
-RUN bundle config set force_ruby_platform true
 
 EXPOSE 3000
 

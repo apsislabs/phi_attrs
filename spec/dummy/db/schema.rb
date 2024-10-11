@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2017_02_14_100255) do
+ActiveRecord::Schema[7.2].define(version: 2017_02_14_100255) do
   create_table "addresses", force: :cascade do |t|
     t.integer "patient_info_id"
     t.string "address"
@@ -21,16 +21,6 @@ ActiveRecord::Schema[7.0].define(version: 2017_02_14_100255) do
     t.integer "patient_info_id"
     t.string "data"
     t.index ["patient_info_id"], name: "index_health_records_on_patient_info_id"
-  end
-
-  create_table "missing_attribute_model", force: :cascade  do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-  end
-
-  create_table "missing_extend_model", force: :cascade  do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
   end
 
   create_table "patient_details", force: :cascade do |t|
@@ -48,5 +38,4 @@ ActiveRecord::Schema[7.0].define(version: 2017_02_14_100255) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
   end
-
 end

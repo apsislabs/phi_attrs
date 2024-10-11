@@ -13,11 +13,12 @@
 
 /spec/dummy/tmp/
 /spec/dummy/db/schema.rb
-*.sqlite
-*.sqlite3
+*.sqlite*
+*.sqlite3*
 *.log
 .rspec_status
 gemfiles/*.gemfile.lock
+gemfiles/.bundle
 
 # Macs. Ugh.
 .DS_Store

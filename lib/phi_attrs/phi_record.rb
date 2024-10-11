@@ -149,7 +149,7 @@ module PhiAttrs
             allow_only.each { |t| t.allow_phi!(user_id, reason) }
           end
 
-          return yield if block_given?
+          return yield
         ensure
           __instances_with_extended_phi.each do |obj|
             if frozen_instances.include?(obj)
@@ -385,15 +385,15 @@ module PhiAttrs
       raise ArgumentError, 'block required' unless block_given?
 
       extended_instances = @__phi_relations_extended.clone
-      allow_phi!(user_id, reason)
+      begin
+        allow_phi!(user_id, reason)
 
-      result = yield if block_given?
-
-      new_extensions = @__phi_relations_extended - extended_instances
-      disallow_last_phi!(preserve_extensions: true)
-      revoke_extended_phi!(new_extensions) if new_extensions.any?
-
-      result
+        return yield
+      ensure
+        new_extensions = @__phi_relations_extended - extended_instances
+        disallow_last_phi!(preserve_extensions: true)
+        revoke_extended_phi!(new_extensions) if new_extensions.any?
+      end
     end
 
     # Revoke all PHI access for a single instance of this class.

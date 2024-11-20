@@ -7,7 +7,7 @@ module PhiAttrs
 
       def initialize(msg)
         PhiAttrs::Logger.tagged(TAG) { PhiAttrs::Logger.error(msg) }
-        super(msg)
+        super
       end
     end
   end

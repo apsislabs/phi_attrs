@@ -439,7 +439,7 @@ Tests are written using [RSpec](http://rspec.info/) and are setup to use [Apprai
 
 To run just a particular rails version:
     $  bundle exec appraisal rails_6.1 rspec
-    $  bundle exec appraisal rails-7.0 rspec
+    $  bundle exec appraisal rails_7.0 rspec
 
 ### Console
 

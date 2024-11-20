@@ -25,8 +25,8 @@ class CreatePatientInfos < ActiveRecord::Migration[5.0]
       t.string :data
     end
 
-    create_table :missing_attribute_model, &:timestamps
+    create_table :missing_attribute_models, &:timestamps
 
-    create_table :missing_extend_model, &:timestamps
+    create_table :missing_extend_models, &:timestamps
   end
 end

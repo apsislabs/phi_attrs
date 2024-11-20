@@ -625,7 +625,7 @@ module PhiAttrs
     #
     def phi_wrap_method(method_name)
       unless respond_to?(method_name)
-        PhiAttrs::Logger.warn("#{self.class.name} tried to wrap non-existant method (#{method_name})")
+        PhiAttrs::Logger.warn("#{self.class.name} tried to wrap non-existent method (#{method_name})")
         return
       end
       return if self.class.__phi_methods_wrapped.include? method_name

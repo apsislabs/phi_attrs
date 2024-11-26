@@ -430,7 +430,7 @@ It is recommended to use the provided `docker-compose` environment for developme
 
 ### Tests
 
-Tests are written using [RSpec](http://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple rails versions.
+Tests are written using [RSpec](https://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple rails versions.
 
     $ bin/run_tests
     or for individual tests:

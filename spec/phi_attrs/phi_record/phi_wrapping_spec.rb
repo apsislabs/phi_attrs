@@ -6,7 +6,7 @@ RSpec.describe 'phi_wrapping' do
   let(:missing_attribute_model) { build(:missing_attribute_model) }
   let(:missing_extend_model) { build(:missing_extend_model) }
 
-  context 'non existant attributes' do
+  context 'non existent attributes' do
     it 'wrapping a method' do
       expect { missing_attribute_model }.not_to raise_error
     end

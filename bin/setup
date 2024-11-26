@@ -7,3 +7,4 @@ gem install bundler -v $BUNDLER_VERSION
 
 bundle check || bundle install
 bundle exec appraisal install
+bundle exec appraisal rake dummy:db:drop dummy:db:create dummy:db:migrate

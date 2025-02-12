@@ -77,13 +77,15 @@ module PhiAttrs
         reason ||= i18n_reason
         raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
+        uuid = SecureRandom.uuid
         __phi_stack.push({
-                           phi_access_allowed: true,
-                           user_id: user_id,
-                           reason: reason
+                            phi_access_allowed: true,
+                            user_id: user_id,
+                            reason: reason,
+                            uuid: uuid
                          })
 
-        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
         end
       end
@@ -210,11 +212,12 @@ module PhiAttrs
       def disallow_phi!
         raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
 
+        uuid = __uuid_string(__phi_stack)
         message = __phi_stack.present? ? "PHI access disabled for #{__user_id_string(__phi_stack)}" : 'PHI access disabled. No class level access was granted.'
 
         __reset_phi_stack
 
-        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info(message)
         end
       end
@@ -228,9 +231,10 @@ module PhiAttrs
         raise ArgumentError, 'block not allowed' if block_given?
 
         removed_access = __phi_stack.pop
+        uuid = __uuid_string(removed_access)
         message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
 
-        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info(message)
         end
       end
@@ -263,6 +267,11 @@ module PhiAttrs
       def __user_id_string(access_list)
         access_list ||= []
         access_list.map { |c| "'#{c[:user_id]}'" }.join(',')
+      end
+
+      def __uuid_string(access_list)
+        access_list ||= []
+        Array.wrap(access_list).map { |c| c[:uuid] }.join(',').presence || 'none'
       end
 
       def current_user
@@ -335,13 +344,15 @@ module PhiAttrs
       reason ||= self.class.i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
-      PhiAttrs::Logger.tagged(*phi_log_keys) do
-        @__phi_access_stack.push({
-                                   phi_access_allowed: true,
-                                   user_id: user_id,
-                                   reason: reason
-                                 })
+      uuid = SecureRandom.uuid
+      @__phi_access_stack.push({
+                                 phi_access_allowed: true,
+                                 user_id: user_id,
+                                 reason: reason,
+                                 uuid: uuid,
+                               })
 
+      PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
       end
     end
@@ -405,7 +416,9 @@ module PhiAttrs
     def disallow_phi!
       raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
 
-      PhiAttrs::Logger.tagged(*phi_log_keys) do
+      removed_access_for_uuid = self.class.__uuid_string(@__phi_access_stack)
+
+      PhiAttrs::Logger.tagged(*phi_log_keys, removed_access_for_uuid) do
         removed_access_for = self.class.__user_id_string(@__phi_access_stack)
 
         revoke_extended_phi!
@@ -451,8 +464,10 @@ module PhiAttrs
     def disallow_last_phi!(preserve_extensions: false)
       raise ArgumentError, 'block not allowed' if block_given?
 
-      PhiAttrs::Logger.tagged(*phi_log_keys) do
-        removed_access = @__phi_access_stack.pop
+      removed_access = @__phi_access_stack.pop
+      uuid = removed_access.present? ? removed_access[:uuid] : nil
+
+      PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
 
         revoke_extended_phi! unless preserve_extensions
         message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No instance level access was granted.'
@@ -634,7 +649,8 @@ module PhiAttrs
       unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
       self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
-        PhiAttrs::Logger.tagged(*phi_log_keys) do
+        uuid = self.class.__uuid_string(@__phi_access_stack)
+        PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
           unless phi_allowed?
             raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}"
           end

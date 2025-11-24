@@ -12,6 +12,8 @@ class PatientInfo < ApplicationRecord
   exclude_from_phi :last_name
   include_in_phi :birthday
 
+  validates :first_name, presence: true
+
   def birthday
     Time.current
   end

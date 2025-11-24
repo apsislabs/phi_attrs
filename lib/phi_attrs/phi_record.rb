@@ -109,7 +109,7 @@ module PhiAttrs
       #
       def allow_phi(user_id = nil, reason = nil, allow_only: nil, &block)
         get_phi(user_id, reason, allow_only: allow_only, &block)
-        return
+        nil
       end
 
       # Enable PHI access for any instance of this class in the block given only
@@ -149,7 +149,7 @@ module PhiAttrs
             allow_only.each { |t| t.allow_phi!(user_id, reason) }
           end
 
-          return yield
+          yield
         ensure
           __instances_with_extended_phi.each do |obj|
             if frozen_instances.include?(obj)
@@ -362,7 +362,7 @@ module PhiAttrs
     #
     def allow_phi(user_id = nil, reason = nil, &block)
       get_phi(user_id, reason, &block)
-      return
+      nil
     end
 
     # Enable PHI access for a single instance of this class inside the block.
@@ -388,7 +388,7 @@ module PhiAttrs
       begin
         allow_phi!(user_id, reason)
 
-        return yield
+        yield
       ensure
         new_extensions = @__phi_relations_extended - extended_instances
         disallow_last_phi!(preserve_extensions: true)
@@ -487,7 +487,7 @@ module PhiAttrs
     # @return [Boolean] whether PHI access is allowed for this instance
     #
     def phi_allowed?
-      !phi_context.nil? && phi_context[:phi_access_allowed]
+      new_record? || (!phi_context.nil? && phi_context[:phi_access_allowed])
     end
 
     # Require phi access. Raises an error pre-emptively if it has not been granted.
@@ -672,7 +672,7 @@ module PhiAttrs
       self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
         relation = send(unwrapped_method, *args, **kwargs, &block)
 
-        if phi_allowed? && (relation.present? && relation_klass(relation).included_modules.include?(PhiRecord))
+        if phi_allowed? && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
           relations = relation.is_a?(Enumerable) ? relation : [relation]
           relations.each do |r|
             r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
@@ -720,7 +720,7 @@ module PhiAttrs
       return rel.klass if rel.is_a?(ActiveRecord::Relation)
       return rel.first.class if rel.is_a?(Enumerable)
 
-      return rel.class
+      rel.class
     end
 
     def wrapped_extended_name(method_name)

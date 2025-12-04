@@ -3,6 +3,7 @@
 require 'rails'
 require 'active_support'
 require 'request_store'
+require 'securerandom'
 
 require 'phi_attrs/version'
 require 'phi_attrs/configure'

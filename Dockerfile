@@ -1,6 +1,6 @@
-ARG RUBY_VERSION=3.1.3
+ARG RUBY_VERSION=3.2
 
-FROM ruby:${RUBY_VERSION}-buster
+FROM ruby:${RUBY_VERSION}-bookworm
 
 RUN apt-get update -qq && apt-get install -y --no-install-recommends \
   build-essential \

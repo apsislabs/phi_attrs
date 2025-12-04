@@ -23,8 +23,6 @@ module Dummy
     config.paths['log'] = 'tmp/log/development.log'
     config.paths.add 'config/routes.rb', with: "#{APP_ROOT}/config/routes.rb"
 
-    config.active_record.sqlite3.represent_boolean_as_integer = true if Rails.version.match?(/^6.0/)
-
     def require_environment!
       initialize!
     end

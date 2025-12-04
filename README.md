@@ -438,7 +438,6 @@ Tests are written using [RSpec](https://rspec.info/) and are setup to use [Appra
     $ bundle exec appraisal rspec spec/path/to/spec.rb
 
 To run just a particular rails version:
-    $  bundle exec appraisal rails_6.1 rspec
     $  bundle exec appraisal rails_7.0 rspec
 
 ### Console

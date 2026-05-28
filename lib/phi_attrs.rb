@@ -41,6 +41,8 @@ module PhiAttrs
       return if PhiAttrs.current_user_method.nil?
       return unless respond_to?(PhiAttrs.current_user_method, true)
 
+      # send intentional: current_user_method is developer-configured, not user input,
+      # and Rails controller helpers are conventionally private
       RequestStore.store[:phi_attrs_current_user] = send(PhiAttrs.current_user_method)
     end
   end

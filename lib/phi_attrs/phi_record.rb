@@ -77,6 +77,9 @@ module PhiAttrs
         reason ||= i18n_reason
         raise ArgumentError, "user_id and reason cannot be blank" if user_id.blank? || reason.blank?
 
+        user_id = user_id.to_s.gsub(/[\r\n]/, " ")
+        reason = reason.to_s.gsub(/[\r\n]/, " ")
+
         __phi_stack.push({
           phi_access_allowed: true,
           user_id: user_id,
@@ -334,6 +337,9 @@ module PhiAttrs
       user_id ||= self.class.current_user
       reason ||= self.class.i18n_reason
       raise ArgumentError, "user_id and reason cannot be blank" if user_id.blank? || reason.blank?
+
+      user_id = user_id.to_s.gsub(/[\r\n]/, " ")
+      reason = reason.to_s.gsub(/[\r\n]/, " ")
 
       PhiAttrs::Logger.tagged(*phi_log_keys) do
         @__phi_access_stack.push({

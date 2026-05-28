@@ -1,30 +1,11 @@
-version: '3'
-
 services:
-  ruby2:
-    build:
-      context: .
-      args:
-        - RUBY_VERSION=2.7.0
-    volumes:
-      - bundle_cache_2:/bundle
-      - .:/app
-    environment:
-      - BUNDLER_VERSION=2.2.33
-      - BUNDLE_JOBS=5
-      - BUNDLE_PATH=/bundle
-      - BUNDLE_BIN=/bundle/bin
-      - GEM_HOME=/bundle
-      - DOCKER_CONTAINER=1
-    command:
-      - docker/start.sh
   ruby3:
     build: .
     volumes:
       - bundle_cache_3:/bundle
       - .:/app
     environment:
-      - BUNDLER_VERSION=2.4.0
+      - BUNDLER_VERSION=2.4.19
       - BUNDLE_JOBS=5
       - BUNDLE_PATH=/bundle
       - BUNDLE_BIN=/bundle/bin

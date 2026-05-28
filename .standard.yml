@@ -1,0 +1,14 @@
+# Standard Ruby configuration
+# https://github.com/testdouble/standard
+
+ruby_version: 3.2
+
+ignore:
+  - "bin/**/*"
+  - "gemfiles/**/*"
+  - "spec/dummy/db/schema.rb"
+  - "vendor/**/*"
+  - "tmp/**/*"
+  - "coverage/**/*"
+
+fix: true

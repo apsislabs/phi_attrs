@@ -2,8 +2,8 @@
 
 FactoryBot.define do
   factory :patient_info do
-    first_name { 'Joe Johnson' }
-    last_name { 'All Houses' }
+    first_name { "Joe Johnson" }
+    last_name { "All Houses" }
     association :address, factory: :address, strategy: :build
     association :patient_detail, factory: :patient_detail, strategy: :build
 

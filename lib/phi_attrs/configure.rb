@@ -5,7 +5,7 @@ module PhiAttrs
   @@log_shift_age = 0 # Default to disabled
   @@log_shift_size = 1_048_576 # 1MB - Default from logger class
   @@current_user_method = nil
-  @@translation_prefix = 'phi'
+  @@translation_prefix = "phi"
 
   def self.configure
     yield self if block_given?

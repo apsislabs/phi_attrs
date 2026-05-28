@@ -1,26 +1,30 @@
-name: Spec CI
+name: Test & Lint
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
+    name: Ruby ${{ matrix.ruby }} / ${{ matrix.appraisal }}
     strategy:
+      fail-fast: false
       matrix:
-        ruby: [3.2, 3.3, 3.4]
+        ruby: ["3.2", "3.3", "3.4"]
+        appraisal: [rails_7.0, rails_7.1, rails_7.2, rails_8.0]
     env:
-      RUBY_VERSION: ${{ matrix.ruby }}
+      BUNDLE_GEMFILE: gemfiles/${{ matrix.appraisal }}.gemfile
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - name: Set up Ruby ${{ matrix.ruby }}
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - name: Install dependencies
-        run: |
-          bundle exec appraisal install
-      - name: Run rspec
-        run: |
-          bundle exec appraisal "rake dummy:db:create dummy:db:migrate && rspec"
+      - name: Lint
+        if: matrix.ruby == '3.4' && matrix.appraisal == 'rails_8.0'
+        run: bundle exec standardrb
+      - name: Run tests
+        run: bundle exec rake spec

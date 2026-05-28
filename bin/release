@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: bin/release patch|minor|major|pre"
+  echo "       bin/release rc X.Y.Z"
+}
+
+level="${1:-}"
+target_version="${2:-}"
+case "$level" in
+  patch|minor|major|pre)
+    if [[ $# -ne 1 ]]; then
+      usage
+      exit 1
+    fi
+    ;;
+  rc)
+    if [[ $# -ne 2 || ! "$target_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      usage
+      exit 1
+    fi
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "Error: bin/release must be run inside a git repository."
+  exit 1
+fi
+
+branch="$(git symbolic-ref --quiet --short HEAD)" || {
+  echo "Error: releases must be run from a branch, not a detached HEAD."
+  exit 1
+}
+
+version_file="$(bundle exec bump file | awk '{print $NF}')"
+current_version="$(bundle exec bump current --value-only)"
+if [[ "$level" == "rc" ]]; then
+  next_version="${target_version}-rc"
+else
+  next_version="$(bundle exec bump show-next "$level" --value-only)"
+fi
+tag="v${next_version}"
+
+if [[ -z "$version_file" || -z "$current_version" || -z "$next_version" ]]; then
+  echo "Error: could not determine gem version information."
+  exit 1
+fi
+
+if ! git diff --quiet -- "$version_file" || ! git diff --cached --quiet -- "$version_file"; then
+  echo "Error: $version_file has uncommitted changes."
+  exit 1
+fi
+
+if git rev-parse "$tag" >/dev/null 2>&1; then
+  echo "Error: tag $tag already exists."
+  exit 1
+fi
+
+echo "Releasing ${tag} (${level})"
+echo "Version: ${current_version} -> ${next_version}"
+echo "Branch:  ${branch}"
+
+if [[ "$level" == "rc" ]]; then
+  bundle exec bump set "$next_version" --no-commit --no-bundle
+else
+  bundle exec bump "$level" --no-commit --no-bundle
+fi
+
+git add "$version_file"
+git commit -m "$tag"
+git tag "$tag"
+
+echo "Pushing ${branch}..."
+git push origin "$branch"
+
+echo "Pushing ${tag}..."
+git push origin "$tag"
+
+echo "Released ${tag}."

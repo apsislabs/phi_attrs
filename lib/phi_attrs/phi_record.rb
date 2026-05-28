@@ -77,13 +77,15 @@ module PhiAttrs
         reason ||= i18n_reason
         raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
+        uuid = SecureRandom.uuid
         __phi_stack.push({
-                           phi_access_allowed: true,
-                           user_id: user_id,
-                           reason: reason
+                            phi_access_allowed: true,
+                            user_id: user_id,
+                            reason: reason,
+                            uuid: uuid
                          })
 
-        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
         end
       end
@@ -210,11 +212,12 @@ module PhiAttrs
       def disallow_phi!
         raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
 
+        uuid = __uuid_string(__phi_stack)
         message = __phi_stack.present? ? "PHI access disabled for #{__user_id_string(__phi_stack)}" : 'PHI access disabled. No class level access was granted.'
 
         __reset_phi_stack
 
-        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info(message)
         end
       end
@@ -228,9 +231,10 @@ module PhiAttrs
         raise ArgumentError, 'block not allowed' if block_given?
 
         removed_access = __phi_stack.pop
+        uuid = __uuid_string(removed_access)
         message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
 
-        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name) do
+        PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info(message)
         end
       end
@@ -263,6 +267,11 @@ module PhiAttrs
       def __user_id_string(access_list)
         access_list ||= []
         access_list.map { |c| "'#{c[:user_id]}'" }.join(',')
+      end
+
+      def __uuid_string(access_list)
+        access_list ||= []
+        Array.wrap(access_list).map { |c| c[:uuid] }.join(',').presence || 'none'
       end
 
       def current_user
@@ -335,13 +344,15 @@ module PhiAttrs
       reason ||= self.class.i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
-      PhiAttrs::Logger.tagged(*phi_log_keys) do
-        @__phi_access_stack.push({
-                                   phi_access_allowed: true,
-                                   user_id: user_id,
-                                   reason: reason
-                                 })
+      uuid = SecureRandom.uuid
+      @__phi_access_stack.push({
+                                 phi_access_allowed: true,
+                                 user_id: user_id,
+                                 reason: reason,
+                                 uuid: uuid,
+                               })
 
+      PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
       end
     end
@@ -405,7 +416,9 @@ module PhiAttrs
     def disallow_phi!
       raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
 
-      PhiAttrs::Logger.tagged(*phi_log_keys) do
+      removed_access_for_uuid = self.class.__uuid_string(@__phi_access_stack)
+
+      PhiAttrs::Logger.tagged(*phi_log_keys, removed_access_for_uuid) do
         removed_access_for = self.class.__user_id_string(@__phi_access_stack)
 
         revoke_extended_phi!
@@ -451,8 +464,10 @@ module PhiAttrs
     def disallow_last_phi!(preserve_extensions: false)
       raise ArgumentError, 'block not allowed' if block_given?
 
-      PhiAttrs::Logger.tagged(*phi_log_keys) do
-        removed_access = @__phi_access_stack.pop
+      removed_access = @__phi_access_stack.pop
+      uuid = removed_access.present? ? removed_access[:uuid] : nil
+
+      PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
 
         revoke_extended_phi! unless preserve_extensions
         message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No instance level access was granted.'
@@ -557,7 +572,7 @@ module PhiAttrs
     # @return [Array<String>] log key for an instance of this class
     #
     def phi_log_keys
-      @__phi_log_id = persisted? ? "Key: #{attributes[self.class.primary_key]}" : "Object: #{object_id}"
+      @__phi_log_id = persisted? ? "Key: #{public_send(self.class.primary_key)}" : "Object: #{object_id}"
       @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, @__phi_log_id]
     end
 
@@ -637,23 +652,26 @@ module PhiAttrs
       wrapped_method = :"__#{method_name}_phi_wrapped"
       unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
-      self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
-        PhiAttrs::Logger.tagged(*phi_log_keys) do
-          unless phi_allowed?
-            raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}"
-          end
+      unless self.class.method_defined?(wrapped_method)
+        self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
+          uuid = self.class.__uuid_string(@__phi_access_stack)
+          PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
+            unless phi_allowed?
+              raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}"
+            end
 
-          unless all_phi_context_logged?
-            PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
-            set_all_phi_context_logged
-          end
+            unless all_phi_context_logged?
+              PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
+              set_all_phi_context_logged
+            end
 
-          send(unwrapped_method, *args, **kwargs, &block)
+            send(unwrapped_method, *args, **kwargs, &block)
+          end
         end
       end
 
       # method_name => wrapped_method => unwrapped_method
-      self.class.send(:alias_method, unwrapped_method, method_name)
+      self.class.send(:alias_method, unwrapped_method, method_name) unless self.class.method_defined?(unwrapped_method)
       self.class.send(:alias_method, method_name, wrapped_method)
 
       self.class.__phi_methods_wrapped << method_name
@@ -673,23 +691,25 @@ module PhiAttrs
       wrapped_method = wrapped_extended_name(method_name)
       unwrapped_method = unwrapped_extended_name(method_name)
 
-      self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
-        relation = send(unwrapped_method, *args, **kwargs, &block)
+      unless self.class.method_defined?(wrapped_method)
+        self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
+          relation = send(unwrapped_method, *args, **kwargs, &block)
 
-        if phi_allowed? && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
-          relations = relation.is_a?(Enumerable) ? relation : [relation]
-          relations.each do |r|
-            r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
+          if phi_allowed? && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+            relations = relation.is_a?(Enumerable) ? relation : [relation]
+            relations.each do |r|
+              r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
+            end
+            @__phi_relations_extended.merge(relations)
+            self.class.__instances_with_extended_phi.add(self)
           end
-          @__phi_relations_extended.merge(relations)
-          self.class.__instances_with_extended_phi.add(self)
-        end
 
-        relation
+          relation
+        end
       end
 
       # method_name => wrapped_method => unwrapped_method
-      self.class.send(:alias_method, unwrapped_method, method_name)
+      self.class.send(:alias_method, unwrapped_method, method_name) unless self.class.method_defined?(unwrapped_method)
       self.class.send(:alias_method, method_name, wrapped_method)
 
       self.class.__phi_methods_to_extend << method_name

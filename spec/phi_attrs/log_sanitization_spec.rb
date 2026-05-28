@@ -17,7 +17,7 @@ RSpec.describe "log sanitization" do
 
   it "strips newlines from class-level allow" do
     PatientInfo.allow_phi!("user\nINJECTED", "reason\nINJECTED")
-    expect(PatientInfo.__phi_stack.last[:user_id]).to eq("user INJECTED")
-    expect(PatientInfo.__phi_stack.last[:reason]).to eq("reason INJECTED")
+    expect(PatientInfo.__phi_stack.last.user_id).to eq("user INJECTED")
+    expect(PatientInfo.__phi_stack.last.reason).to eq("reason INJECTED")
   end
 end

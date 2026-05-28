@@ -529,7 +529,7 @@ module PhiAttrs
     # @return [String] the user_id passed in to allow_phi!
     #
     def phi_allowed_by
-      phi_context[:user_id]
+      phi_context&.dig(:user_id)
     end
 
     # The access reason for allowing access to this instance.
@@ -538,7 +538,7 @@ module PhiAttrs
     # @return [String] the reason passed in to allow_phi!
     #
     def phi_access_reason
-      phi_context[:reason]
+      phi_context&.dig(:reason)
     end
 
     # Whether PHI access is allowed for a single instance of this class
@@ -562,7 +562,7 @@ module PhiAttrs
     #   end
     #
     def require_phi!
-      raise PhiAccessException, "PHI Access required, please call allow_phi or allow_phi! first" unless phi_allowed?
+      raise PhiAttrs::Exceptions::PhiAccessException, "PHI Access required, please call allow_phi or allow_phi! first" unless phi_allowed?
     end
 
     def reload

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreatePatientInfos < ActiveRecord::Migration[5.0]
+class CreatePatientInfos < ActiveRecord::Migration[7.0]
   def change
     create_table :patient_infos do |t|
       t.string :first_name

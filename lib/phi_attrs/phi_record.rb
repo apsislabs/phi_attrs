@@ -196,13 +196,12 @@ module PhiAttrs
       def disallow_phi
         raise ArgumentError, "block required. use disallow_phi! without block" unless block_given?
 
-        __phi_stack.push({
-          phi_access_allowed: false
-        })
-
-        yield if block_given?
-
-        __phi_stack.pop
+        __phi_stack.push({phi_access_allowed: false})
+        begin
+          yield
+        ensure
+          __phi_stack.pop
+        end
       end
 
       # Revoke all PHI access for this class, if enabled by PhiRecord#allow_phi!
@@ -441,11 +440,12 @@ module PhiAttrs
 
       add_disallow_flag!
       add_disallow_flag_to_extended_phi!
-
-      yield if block_given?
-
-      remove_disallow_flag_from_extended_phi!
-      remove_disallow_flag!
+      begin
+        yield
+      ensure
+        remove_disallow_flag_from_extended_phi!
+        remove_disallow_flag!
+      end
     end
 
     # Revoke last PHI access for a single instance of this class.
@@ -642,7 +642,7 @@ module PhiAttrs
       self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
         PhiAttrs::Logger.tagged(*phi_log_keys) do
           unless phi_allowed?
-            raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} #{@__phi_user_id}"
+            raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} (#{phi_log_keys.last})"
           end
 
           unless all_phi_context_logged?
@@ -658,7 +658,7 @@ module PhiAttrs
       self.class.send(:alias_method, unwrapped_method, method_name)
       self.class.send(:alias_method, method_name, wrapped_method)
 
-      self.class.__phi_methods_wrapped << method_name
+      self.class.__phi_methods_wrapped = self.class.__phi_methods_wrapped + [method_name]
     end
 
     # Core logic for wrapping methods in PHI access extensions. Almost
@@ -694,7 +694,7 @@ module PhiAttrs
       self.class.send(:alias_method, unwrapped_method, method_name)
       self.class.send(:alias_method, method_name, wrapped_method)
 
-      self.class.__phi_methods_to_extend << method_name
+      self.class.__phi_methods_to_extend = self.class.__phi_methods_to_extend + [method_name]
     end
 
     # Revoke PHI access for all `extend`ed relations (or only those given)

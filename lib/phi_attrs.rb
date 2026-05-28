@@ -20,7 +20,7 @@ module PhiAttrs
   end
 
   module Model
-    def phi_model(with: nil, except: nil)
+    def phi_model
       include PhiRecord
     end
   end

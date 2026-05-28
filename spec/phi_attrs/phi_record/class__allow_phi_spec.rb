@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require 'spec_helper'
 
-RSpec.describe "class allow_phi" do
+RSpec.describe 'class allow_phi' do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
-  let(:patient_detail) { build(:patient_detail) }
-  let(:patient_with_detail) { build(:patient_info, first_name: "Jack", patient_detail: patient_detail) }
+  let(:patient_jane) { create(:patient_info, first_name: 'Jane') }
+  let(:patient_detail) { create(:patient_detail) }
+  let(:patient_with_detail) { create(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
 
-  context "authorized" do
-    it "allows access to any instance" do |t|
+  context 'authorized' do
+    it 'allows access to any instance' do |t|
       expect { patient_jane.first_name }.to raise_error(access_error)
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect { patient_jane.first_name }.not_to raise_error
@@ -19,7 +19,7 @@ RSpec.describe "class allow_phi" do
       expect { patient_jane.first_name }.not_to raise_error
     end
 
-    it "only allows access to the authorized class" do |t|
+    it 'only allows access to the authorized class' do |t|
       expect { patient_detail.detail }.to raise_error(access_error)
       expect { patient_jane.first_name }.to raise_error(access_error)
 
@@ -37,7 +37,7 @@ RSpec.describe "class allow_phi" do
       expect { patient_detail.detail }.to raise_error(access_error)
     end
 
-    it "revokes access after calling disallow_phi!" do |t|
+    it 'revokes access after calling disallow_phi!' do |t|
       expect { patient_jane.first_name }.to raise_error(access_error)
 
       PatientInfo.allow_phi!(file_name, t.full_description)
@@ -49,15 +49,15 @@ RSpec.describe "class allow_phi" do
       expect { patient_jane.first_name }.to raise_error(access_error)
     end
 
-    it "raises ArgumentError for allow_phi! with blank values" do
-      expect { PatientInfo.allow_phi! "", "" }.to raise_error(ArgumentError)
-      expect { PatientInfo.allow_phi! "ok", "" }.to raise_error(ArgumentError)
-      expect { PatientInfo.allow_phi! "", "ok" }.to raise_error(ArgumentError)
-      expect { PatientInfo.allow_phi! "ok", "ok" }.not_to raise_error
+    it 'raises ArgumentError for allow_phi! with blank values' do
+      expect { PatientInfo.allow_phi! '', '' }.to raise_error(ArgumentError)
+      expect { PatientInfo.allow_phi! 'ok', '' }.to raise_error(ArgumentError)
+      expect { PatientInfo.allow_phi! '', 'ok' }.to raise_error(ArgumentError)
+      expect { PatientInfo.allow_phi! 'ok', 'ok' }.not_to raise_error
     end
 
-    it "allow_phi persists after a reload" do |t|
-      dumbledore = create(:patient_info, first_name: "Albus", patient_detail: build(:patient_detail))
+    it 'allow_phi persists after a reload' do |t|
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail))
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect { dumbledore.first_name }.not_to raise_error
         dumbledore.reload
@@ -65,8 +65,8 @@ RSpec.describe "class allow_phi" do
       end
     end
 
-    it "allow_phi persists extended phi after a reload" do |t|
-      dumbledore = create(:patient_info, first_name: "Albus", patient_detail: build(:patient_detail, :all_random))
+    it 'allow_phi persists extended phi after a reload' do |t|
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail, :all_random))
       expect { dumbledore.patient_detail.detail }.to raise_error(access_error)
 
       PatientInfo.allow_phi(file_name, t.full_description) do
@@ -78,8 +78,8 @@ RSpec.describe "class allow_phi" do
       expect { dumbledore.patient_detail.detail }.to raise_error(access_error)
     end
 
-    it "allow_phi persists extended phi after a reload _and_ respects previous data" do |t|
-      dumbledore = create(:patient_info, first_name: "Albus", patient_detail: build(:patient_detail, :all_random))
+    it 'allow_phi persists extended phi after a reload _and_ respects previous data' do |t|
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail, :all_random))
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { dumbledore.patient_detail.detail }.not_to raise_error
 
@@ -92,49 +92,49 @@ RSpec.describe "class allow_phi" do
       expect { dumbledore.patient_detail.detail }.not_to raise_error
     end
 
-    it "allow_phi! persists after a reload" do |t|
-      dumbledore = create(:patient_info, first_name: "Albus", patient_detail: build(:patient_detail))
+    it 'allow_phi! persists after a reload' do |t|
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail))
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { dumbledore.first_name }.not_to raise_error
       dumbledore.reload
       expect { dumbledore.first_name }.not_to raise_error
     end
 
-    it "allow_phi! persists extended phi after a reload" do |t|
-      dumbledore = create(:patient_info, first_name: "Albus", patient_detail: build(:patient_detail, :all_random))
+    it 'allow_phi! persists extended phi after a reload' do |t|
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail, :all_random))
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { dumbledore.patient_detail.detail }.not_to raise_error
       dumbledore.reload
       expect { dumbledore.patient_detail.detail }.not_to raise_error
     end
 
-    it "get_phi with block returns value" do |t|
-      expect(PatientInfo.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq("Jane")
+    it 'get_phi with block returns value' do |t|
+      expect(PatientInfo.get_phi(file_name, t.full_description) { patient_jane.first_name }).to eq('Jane')
     end
 
-    it "does not leak phi allowance if get_phi returns", :aggregate_failures do |t|
+    it 'does not leak phi allowance if get_phi returns', :aggregate_failures do |t|
       def name_getter(reason, description)
         PatientInfo.get_phi(reason, description) { return patient_jane.first_name }
       end
 
       expect(patient_jane.phi_allowed?).to be false
       first_name = name_getter(file_name, t.full_description)
-      expect(first_name).to eq("Jane")
+      expect(first_name).to eq('Jane')
       expect(patient_jane.phi_allowed?).to be false
     end
   end
 
-  context "extended authorization" do
+  context 'extended authorization' do
     let(:patient_mary) { create(:patient_info, :with_multiple_health_records) }
 
-    it "extends access to associations" do |t|
+    it 'extends access to associations' do |t|
       expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
 
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { patient_mary.patient_detail.detail }.not_to raise_error
     end
 
-    it "extends access with a block" do |t|
+    it 'extends access with a block' do |t|
       expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
 
       PatientInfo.allow_phi(file_name, t.full_description) do
@@ -144,7 +144,7 @@ RSpec.describe "class allow_phi" do
       expect { patient_mary.patient_detail.detail }.to raise_error(access_error)
     end
 
-    it "does not revoke access for untouched associations" do |t|
+    it 'does not revoke access for untouched associations' do |t|
       # Here we extend access to two different associations.
       # When the block terminates, it should revoke (the one frame of) the `health_records` access,
       # but it should NOT revoke (the only frame of) the `patient_detail` access.
@@ -169,8 +169,8 @@ RSpec.describe "class allow_phi" do
     end
   end
 
-  context "nested allowances" do
-    it "retains outer access when disallowed at inner level" do |t|
+  context 'nested allowances' do
+    it 'retains outer access when disallowed at inner level' do |t|
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect { patient_with_detail.first_name }.not_to raise_error
 
@@ -187,22 +187,22 @@ RSpec.describe "class allow_phi" do
     end
   end
 
-  context "block checks" do
-    context "allow_phi" do
-      it "succeeds" do
-        expect { PatientInfo.allow_phi!("ok", "ok") }.not_to raise_error
+  context 'block checks' do
+    context 'allow_phi' do
+      it 'succeeds' do
+        expect { PatientInfo.allow_phi!('ok', 'ok') }.not_to raise_error
       end
-      it "raises ArgumentError with block" do
-        expect { PatientInfo.allow_phi!("ok", "ok") { do_nothing } }.to raise_error(ArgumentError)
+      it 'raises ArgumentError with block' do
+        expect { PatientInfo.allow_phi!('ok', 'ok') { do_nothing } }.to raise_error(ArgumentError)
       end
     end
 
-    context "allow_phi!" do
-      it "succeeds" do
-        expect { PatientInfo.allow_phi("ok", "ok") { do_nothing } }.not_to raise_error
+    context 'allow_phi!' do
+      it 'succeeds' do
+        expect { PatientInfo.allow_phi('ok', 'ok') { do_nothing } }.not_to raise_error
       end
-      it "raises ArgumentError for allow_phi! without block" do
-        expect { PatientInfo.allow_phi("ok", "ok") }.to raise_error(ArgumentError)
+      it 'raises ArgumentError for allow_phi! without block' do
+        expect { PatientInfo.allow_phi('ok', 'ok') }.to raise_error(ArgumentError)
       end
     end
   end

@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
-require "rails"
-require "active_support"
-require "request_store"
+require 'rails'
+require 'active_support'
+require 'request_store'
+require 'securerandom'
 
-require "phi_attrs/version"
-require "phi_attrs/configure"
-require "phi_attrs/railtie" if defined?(Rails)
-require "phi_attrs/formatter"
-require "phi_attrs/logger"
-require "phi_attrs/exceptions"
-require "phi_attrs/phi_record"
+require 'phi_attrs/version'
+require 'phi_attrs/configure'
+require 'phi_attrs/railtie' if defined?(Rails)
+require 'phi_attrs/formatter'
+require 'phi_attrs/logger'
+require 'phi_attrs/exceptions'
+require 'phi_attrs/phi_record'
 
 module PhiAttrs
   def self.log_phi_access(user, message)
@@ -20,7 +21,7 @@ module PhiAttrs
   end
 
   module Model
-    def phi_model
+    def phi_model(with: nil, except: nil)
       include PhiRecord
     end
   end
@@ -41,8 +42,6 @@ module PhiAttrs
       return if PhiAttrs.current_user_method.nil?
       return unless respond_to?(PhiAttrs.current_user_method, true)
 
-      # send intentional: current_user_method is developer-configured, not user input,
-      # and Rails controller helpers are conventionally private
       RequestStore.store[:phi_attrs_current_user] = send(PhiAttrs.current_user_method)
     end
   end

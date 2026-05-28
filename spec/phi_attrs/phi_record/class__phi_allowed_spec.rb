@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require 'spec_helper'
 
-RSpec.describe "class phi_allowed?" do
+RSpec.describe 'class phi_allowed?' do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { create(:patient_info, first_name: 'Jane') }
 
-  context "authorized" do
-    it "works" do |t|
+  context 'authorized' do
+    it 'works' do |t|
       expect(PatientInfo.phi_allowed?).to be false
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect(PatientInfo.phi_allowed?).to be true
@@ -17,7 +17,7 @@ RSpec.describe "class phi_allowed?" do
       expect(PatientInfo.phi_allowed?).to be true
     end
 
-    it "only allows access to the authorized class" do |t|
+    it 'only allows access to the authorized class' do |t|
       expect(PatientDetail.phi_allowed?).to be false
 
       PatientInfo.allow_phi(file_name, t.full_description) do
@@ -34,7 +34,7 @@ RSpec.describe "class phi_allowed?" do
       expect(PatientDetail.phi_allowed?).to be false
     end
 
-    it "revokes access after calling disallow_phi!" do |t|
+    it 'revokes access after calling disallow_phi!' do |t|
       expect(PatientInfo.phi_allowed?).to be false
 
       PatientInfo.allow_phi!(file_name, t.full_description)
@@ -46,7 +46,7 @@ RSpec.describe "class phi_allowed?" do
       expect(PatientInfo.phi_allowed?).to be false
     end
 
-    it "revokes access for disallow_phi block" do |t|
+    it 'revokes access for disallow_phi block' do |t|
       expect(PatientInfo.phi_allowed?).to be false
 
       PatientInfo.allow_phi!(file_name, t.full_description)
@@ -61,8 +61,8 @@ RSpec.describe "class phi_allowed?" do
     end
   end
 
-  context "nested allowances" do
-    it "retains outer access when disallowed at inner level" do |t|
+  context 'nested allowances' do
+    it 'retains outer access when disallowed at inner level' do |t|
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect(PatientInfo.phi_allowed?).to be true
 
@@ -76,7 +76,7 @@ RSpec.describe "class phi_allowed?" do
       expect(PatientInfo.phi_allowed?).to be false
     end
 
-    it "retains outer access when disallow block at inner level" do |t|
+    it 'retains outer access when disallow block at inner level' do |t|
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect(PatientInfo.phi_allowed?).to be true
 
@@ -90,7 +90,7 @@ RSpec.describe "class phi_allowed?" do
       expect(PatientInfo.phi_allowed?).to be false
     end
 
-    it "retains outer access with nested disallow blocks" do |t|
+    it 'retains outer access with nested disallow blocks' do |t|
       PatientInfo.allow_phi!(file_name, t.full_description)
 
       PatientInfo.disallow_phi do
@@ -107,15 +107,15 @@ RSpec.describe "class phi_allowed?" do
     end
   end
 
-  context "with instance" do
-    it "allow_phi does not change status" do |t|
+  context 'with instance' do
+    it 'allow_phi does not change status' do |t|
       expect(PatientInfo.phi_allowed?).to be false
       patient_jane.allow_phi(file_name, t.full_description) do
         expect(PatientInfo.phi_allowed?).to be false
       end
     end
 
-    it "disallow_phi does not change status" do |t|
+    it 'disallow_phi does not change status' do |t|
       expect(PatientInfo.phi_allowed?).to be false
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect(PatientInfo.phi_allowed?).to be true

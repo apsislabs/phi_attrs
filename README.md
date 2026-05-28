@@ -204,12 +204,25 @@ patient.patient_info.first_name
 
 **NOTE:** This is not intended to be used on all relationships! Only those where you intend to grant implicit access based on access to another model. In this use case, we assume that allowed access to `Patient` implies allowed access to `PatientInfo`, and therefore does not require an additional `allow_phi!` check. There are no guaranteed safeguards against circular `extend_phi_access` calls!
 
+### New Records
+
+PHI access is automatically allowed for new (unsaved) records. This allows attributes to be set during object creation without requiring an explicit `allow_phi!` call. Once a record has been persisted, normal PHI access controls apply.
+
+```ruby
+patient = Patient.new
+patient.phi_allowed? # => true
+patient.first_name = 'Jane' # works without allow_phi!
+
+patient.save!
+patient.phi_allowed? # => false — must call allow_phi! after persisting
+```
+
 ### Check If PHI Access Is Allowed
 
 To check if PHI is allowed for a particular instance of a class call `phi_allowed?`.
 
 ```ruby
-patient = Patient.new
+patient = Patient.find(1)
 patient.phi_allowed? # => false
 
 patient.allow_phi('user@example.com', 'reason') do

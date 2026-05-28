@@ -5,8 +5,8 @@ require 'spec_helper'
 RSpec.describe 'instance disallow_phi' do
   file_name = __FILE__
 
-  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
-  let(:patient_john) { build(:patient_info, first_name: 'John') }
+  let(:patient_jane) { create(:patient_info, first_name: 'Jane') }
+  let(:patient_john) { create(:patient_info, first_name: 'John') }
 
   context 'block' do
     it 'disables all allowances within the block' do |t|

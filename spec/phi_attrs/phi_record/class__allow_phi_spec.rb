@@ -4,9 +4,9 @@ require 'spec_helper'
 
 RSpec.describe 'class allow_phi' do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
-  let(:patient_detail) { build(:patient_detail) }
-  let(:patient_with_detail) { build(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
+  let(:patient_jane) { create(:patient_info, first_name: 'Jane') }
+  let(:patient_detail) { create(:patient_detail) }
+  let(:patient_with_detail) { create(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
 
   context 'authorized' do
     it 'allows access to any instance' do |t|
@@ -57,7 +57,7 @@ RSpec.describe 'class allow_phi' do
     end
 
     it 'allow_phi persists after a reload' do |t|
-      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail))
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail))
       PatientInfo.allow_phi(file_name, t.full_description) do
         expect { dumbledore.first_name }.not_to raise_error
         dumbledore.reload
@@ -66,7 +66,7 @@ RSpec.describe 'class allow_phi' do
     end
 
     it 'allow_phi persists extended phi after a reload' do |t|
-      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail, :all_random))
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail, :all_random))
       expect { dumbledore.patient_detail.detail }.to raise_error(access_error)
 
       PatientInfo.allow_phi(file_name, t.full_description) do
@@ -79,7 +79,7 @@ RSpec.describe 'class allow_phi' do
     end
 
     it 'allow_phi persists extended phi after a reload _and_ respects previous data' do |t|
-      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail, :all_random))
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail, :all_random))
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { dumbledore.patient_detail.detail }.not_to raise_error
 
@@ -93,7 +93,7 @@ RSpec.describe 'class allow_phi' do
     end
 
     it 'allow_phi! persists after a reload' do |t|
-      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail))
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail))
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { dumbledore.first_name }.not_to raise_error
       dumbledore.reload
@@ -101,7 +101,7 @@ RSpec.describe 'class allow_phi' do
     end
 
     it 'allow_phi! persists extended phi after a reload' do |t|
-      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: build(:patient_detail, :all_random))
+      dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail, :all_random))
       PatientInfo.allow_phi!(file_name, t.full_description)
       expect { dumbledore.patient_detail.detail }.not_to raise_error
       dumbledore.reload

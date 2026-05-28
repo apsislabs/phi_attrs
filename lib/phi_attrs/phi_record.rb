@@ -600,8 +600,13 @@ module PhiAttrs
     # @return [Array<String>] log key for an instance of this class
     #
     def phi_log_keys
-      @__phi_log_id = persisted? ? "Key: #{attributes[self.class.primary_key]}" : "Object: #{object_id}"
-      @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, @__phi_log_id]
+      current_id = persisted? ? id : object_id
+      if @__phi_log_cached_id != current_id
+        @__phi_log_cached_id = current_id
+        prefix = persisted? ? "Key: #{current_id}" : "Object: #{current_id}"
+        @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, prefix].freeze
+      end
+      @__phi_log_keys
     end
 
     def phi_context
@@ -623,19 +628,19 @@ module PhiAttrs
     # @return String of all the user_id's passed in to allow_phi!
     #
     def all_phi_allowed_by
-      self.class.__user_id_string(all_phi_context)
-    end
-
-    def all_phi_context
-      (@__phi_access_stack || []) + (self.class.__phi_stack || [])
+      ids = (@__phi_access_stack || []).filter_map { |c| "'#{c[:user_id]}'" }
+      ids.concat(self.class.__phi_stack.filter_map { |c| "'#{c[:user_id]}'" })
+      ids.join(",")
     end
 
     def all_phi_context_logged?
-      all_phi_context.all? { |v| v[:logged] }
+      (@__phi_access_stack.nil? || @__phi_access_stack.all? { |v| v[:logged] }) &&
+        self.class.__phi_stack.all? { |v| v[:logged] }
     end
 
     def set_all_phi_context_logged
-      all_phi_context.each { |c| c[:logged] = true }
+      @__phi_access_stack&.each { |c| c[:logged] = true }
+      self.class.__phi_stack.each { |c| c[:logged] = true }
     end
 
     def __phi_init

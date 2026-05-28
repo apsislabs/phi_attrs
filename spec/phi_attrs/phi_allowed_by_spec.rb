@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "phi_allowed_by and phi_access_reason" do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { create(:patient_info, first_name: "Jane") }
 
   context "phi_allowed_by" do
     it "returns nil when no access granted" do

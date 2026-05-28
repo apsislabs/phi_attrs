@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe "log sanitization" do
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { create(:patient_info, first_name: "Jane") }
 
   it "strips newlines from user_id" do
     patient_jane.allow_phi!("user\nINJECTED", "reason")

@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "require_phi!" do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { create(:patient_info, first_name: "Jane") }
 
   it "raises PhiAccessException when no access granted" do
     expect { patient_jane.require_phi! }.to raise_error(access_error)

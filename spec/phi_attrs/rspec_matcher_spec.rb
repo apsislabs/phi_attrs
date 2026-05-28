@@ -5,7 +5,7 @@ require "phi_attrs/rspec"
 
 RSpec.describe "allow_phi_access matcher" do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { create(:patient_info, first_name: "Jane") }
 
   context "positive match" do
     it "matches when phi access is allowed" do |t|

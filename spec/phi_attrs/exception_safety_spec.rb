@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe "exception safety" do
   file_name = __FILE__
-  let(:patient_jane) { build(:patient_info, first_name: "Jane") }
+  let(:patient_jane) { create(:patient_info, first_name: "Jane") }
 
   context "class-level disallow_phi block" do
     it "restores permission when block raises" do |t|

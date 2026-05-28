@@ -553,7 +553,7 @@ module PhiAttrs
     # @return [Array<String>] log key for an instance of this class
     #
     def phi_log_keys
-      @__phi_log_id = persisted? ? "Key: #{attributes[self.class.primary_key]}" : "Object: #{object_id}"
+      @__phi_log_id = persisted? ? "Key: #{public_send(self.class.primary_key)}" : "Object: #{object_id}"
       @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, @__phi_log_id]
     end
 

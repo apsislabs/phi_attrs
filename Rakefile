@@ -14,10 +14,6 @@ end
 RSpec::Core::RakeTask.new(:spec)
 Rake::Task[:spec].enhance(["dummy:db:create", "dummy:db:migrate"])
 
-begin
-  require "standard/rake"
-rescue LoadError
-  # Standard not available
-end
+require "standard/rake"
 
 task default: [:standard, :spec]

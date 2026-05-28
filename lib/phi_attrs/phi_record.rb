@@ -14,14 +14,11 @@ module PhiAttrs
       class_attribute :__phi_exclude_methods
       class_attribute :__phi_include_methods
       class_attribute :__phi_extend_methods
-      class_attribute :__phi_methods_wrapped
-      class_attribute :__phi_methods_to_extend
+      class_attribute :__phi_methods_wrapped, default: []
+      class_attribute :__phi_methods_to_extend, default: []
+      class_attribute :__phi_class_wrapped, default: false
 
-      after_initialize :wrap_phi
-
-      # These have to default to an empty array
-      self.__phi_methods_wrapped = []
-      self.__phi_methods_to_extend = []
+      after_initialize :__phi_init
     end
 
     class_methods do
@@ -300,25 +297,85 @@ module PhiAttrs
         class_name_parts = module_paths.pop.split("_")
         module_paths.push(class_name_parts.join("_"))
       end
-    end
 
-    # Get all method names to be wrapped with PHI access logging
-    #
-    # @return [Array<String>] the method names to be wrapped with PHI access logging
-    #
-    def __phi_wrapped_methods
-      excluded_methods = self.class.__phi_exclude_methods.to_a
-      included_methods = self.class.__phi_include_methods.to_a
+      def __computed_phi_wrapped_methods
+        @__computed_phi_wrapped_methods ||= begin
+          excluded = __phi_exclude_methods.to_a
+          included = __phi_include_methods.to_a
+          attribute_names - excluded + included - [primary_key]
+        end
+      end
 
-      attribute_names - excluded_methods + included_methods - [self.class.primary_key]
-    end
+      def __computed_phi_extended_methods
+        @__computed_phi_extended_methods ||= __phi_extend_methods.to_a
+      end
 
-    # Get all method names to be wrapped with PHI access extension
-    #
-    # @return [Array<String>] the method names to be wrapped with PHI access extension
-    #
-    def __phi_extended_methods
-      self.class.__phi_extend_methods.to_a
+      def __phi_wrap_class_methods!(instance)
+        return if __phi_class_wrapped
+
+        __computed_phi_wrapped_methods.each { |m| __phi_wrap_method!(m, instance) }
+        __computed_phi_extended_methods.each { |m| __phi_wrap_extension!(m, instance) }
+        self.__phi_class_wrapped = true
+      end
+
+      def __phi_wrap_method!(method_name, instance)
+        unless instance.respond_to?(method_name)
+          PhiAttrs::Logger.warn("#{name} tried to wrap non-existent method (#{method_name})")
+          return
+        end
+        return if __phi_methods_wrapped.include?(method_name)
+
+        wrapped_method = :"__#{method_name}_phi_wrapped"
+        unwrapped_method = :"__#{method_name}_phi_unwrapped"
+
+        define_method(wrapped_method) do |*args, **kwargs, &block|
+          PhiAttrs::Logger.tagged(*phi_log_keys) do
+            unless phi_allowed?
+              raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} (#{phi_log_keys.last})"
+            end
+
+            unless all_phi_context_logged?
+              PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
+              set_all_phi_context_logged
+            end
+
+            send(unwrapped_method, *args, **kwargs, &block)
+          end
+        end
+
+        alias_method unwrapped_method, method_name
+        alias_method method_name, wrapped_method
+
+        self.__phi_methods_wrapped = __phi_methods_wrapped + [method_name]
+      end
+
+      def __phi_wrap_extension!(method_name, instance)
+        raise NameError, "Undefined relationship in `extend_phi_access`: #{method_name}" unless instance.respond_to?(method_name)
+        return if __phi_methods_to_extend.include?(method_name)
+
+        wrapped_method = :"__#{method_name}_phi_access_extended"
+        unwrapped_method = :"__#{method_name}_phi_access_original"
+
+        define_method(wrapped_method) do |*args, **kwargs, &block|
+          relation = send(unwrapped_method, *args, **kwargs, &block)
+
+          if phi_allowed? && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+            relations = relation.is_a?(Enumerable) ? relation : [relation]
+            relations.each do |r|
+              r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
+            end
+            @__phi_relations_extended.merge(relations)
+            self.class.__instances_with_extended_phi.add(self)
+          end
+
+          relation
+        end
+
+        alias_method unwrapped_method, method_name
+        alias_method method_name, wrapped_method
+
+        self.__phi_methods_to_extend = __phi_methods_to_extend + [method_name]
+      end
     end
 
     # Enable PHI access for a single instance of this class.
@@ -531,22 +588,6 @@ module PhiAttrs
 
     private
 
-    # Entry point for wrapping methods with PHI access logging. This is called
-    # by an `after_initialize` hook from ActiveRecord.
-    #
-    # @private
-    #
-    def wrap_phi
-      # Disable PHI access by default
-      @__phi_access_stack = []
-      @__phi_methods_extended = Set.new
-      @__phi_relations_extended = Set.new
-
-      # Wrap attributes with PHI Logger and Access Control
-      __phi_wrapped_methods.each { |m| phi_wrap_method(m) }
-      __phi_extended_methods.each { |m| phi_wrap_extension(m) }
-    end
-
     # Log Key for an instance of this class. If the instance is persisted in the
     # database, then it is the primary key; otherwise it is the Ruby object_id
     # in memory.
@@ -597,107 +638,12 @@ module PhiAttrs
       all_phi_context.each { |c| c[:logged] = true }
     end
 
-    # Core logic for wrapping methods in PHI access logging and access restriction.
-    #
-    # This method takes a single method name, and creates a new method using
-    # define_method; once this method is defined, the original method name
-    # is aliased to the new method, and the original method is renamed to a
-    # known key.
-    #
-    # @private
-    #
-    # @example
-    #   Foo::phi_wrap_method(:bar)
-    #
-    #   foo = Foo.find(1)
-    #   foo.bar # => raises PHI Access Exception
-    #
-    #   foo.allow_phi!('user@example.com', 'testing')
-    #
-    #   foo.bar # => returns original value of Foo#bar
-    #
-    #   # defines two new methods:
-    #   #   __bar_phi_wrapped
-    #   #   __bar_phi_unwrapped
-    #   #
-    #   # After these methods are defined
-    #   # an alias chain is created that
-    #   # roughly maps:
-    #   #
-    #   # bar => __bar_phi_wrapped => __bar_phi_unwrapped
-    #   #
-    #   # This ensures that all calls to Foo#bar pass
-    #   # through access logging.
-    #
-    def phi_wrap_method(method_name)
-      unless respond_to?(method_name)
-        PhiAttrs::Logger.warn("#{self.class.name} tried to wrap non-existent method (#{method_name})")
-        return
-      end
-      return if self.class.__phi_methods_wrapped.include? method_name
-
-      wrapped_method = :"__#{method_name}_phi_wrapped"
-      unwrapped_method = :"__#{method_name}_phi_unwrapped"
-
-      self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
-        PhiAttrs::Logger.tagged(*phi_log_keys) do
-          unless phi_allowed?
-            raise PhiAttrs::Exceptions::PhiAccessException, "Attempted PHI access for #{self.class.name} (#{phi_log_keys.last})"
-          end
-
-          unless all_phi_context_logged?
-            PhiAttrs::Logger.info("#{self.class.name} access by [#{all_phi_allowed_by}]. Triggered by method: #{method_name}")
-            set_all_phi_context_logged
-          end
-
-          send(unwrapped_method, *args, **kwargs, &block)
-        end
-      end
-
-      # method_name => wrapped_method => unwrapped_method
-      self.class.send(:alias_method, unwrapped_method, method_name)
-      self.class.send(:alias_method, method_name, wrapped_method)
-
-      self.class.__phi_methods_wrapped = self.class.__phi_methods_wrapped + [method_name]
+    def __phi_init
+      @__phi_access_stack = []
+      @__phi_relations_extended = Set.new
+      self.class.__phi_wrap_class_methods!(self)
     end
 
-    # Core logic for wrapping methods in PHI access extensions. Almost
-    # functionally equivalent to the phi_wrap_method call above,
-    # this method doesn't add any logging or access restriction, but
-    # simply proxies the PhiRecord#allow_phi! call.
-    #
-    # @private
-    #
-    def phi_wrap_extension(method_name)
-      raise NameError, "Undefined relationship in `extend_phi_access`: #{method_name}" unless respond_to?(method_name)
-      return if self.class.__phi_methods_to_extend.include? method_name
-
-      wrapped_method = wrapped_extended_name(method_name)
-      unwrapped_method = unwrapped_extended_name(method_name)
-
-      self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
-        relation = send(unwrapped_method, *args, **kwargs, &block)
-
-        if phi_allowed? && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
-          relations = relation.is_a?(Enumerable) ? relation : [relation]
-          relations.each do |r|
-            r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
-          end
-          @__phi_relations_extended.merge(relations)
-          self.class.__instances_with_extended_phi.add(self)
-        end
-
-        relation
-      end
-
-      # method_name => wrapped_method => unwrapped_method
-      self.class.send(:alias_method, unwrapped_method, method_name)
-      self.class.send(:alias_method, method_name, wrapped_method)
-
-      self.class.__phi_methods_to_extend = self.class.__phi_methods_to_extend + [method_name]
-    end
-
-    # Revoke PHI access for all `extend`ed relations (or only those given)
     def revoke_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
@@ -706,7 +652,6 @@ module PhiAttrs
       @__phi_relations_extended.subtract(relations)
     end
 
-    # Adds a disallow PHI access to the stack for block syntax for all `extend`ed relations (or only those given)
     def add_disallow_flag_to_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
@@ -714,7 +659,6 @@ module PhiAttrs
       end
     end
 
-    # Adds a disallow PHI access to the stack for all for all `extend`ed relations (or only those given)
     def remove_disallow_flag_from_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
@@ -727,14 +671,6 @@ module PhiAttrs
       return rel.first.class if rel.is_a?(Enumerable)
 
       rel.class
-    end
-
-    def wrapped_extended_name(method_name)
-      :"__#{method_name}_phi_access_extended"
-    end
-
-    def unwrapped_extended_name(method_name)
-      :"__#{method_name}_phi_access_original"
     end
   end
 end

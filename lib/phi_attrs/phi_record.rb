@@ -466,6 +466,8 @@ module PhiAttrs
     # @return [String] the user_id passed in to allow_phi!
     #
     def phi_allowed_by
+      return '__new_record__' if new_record?
+
       phi_context[:user_id]
     end
 
@@ -475,6 +477,8 @@ module PhiAttrs
     # @return [String] the reason passed in to allow_phi!
     #
     def phi_access_reason
+      return 'new record' if new_record?
+
       phi_context[:reason]
     end
 

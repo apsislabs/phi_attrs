@@ -5,7 +5,7 @@ require 'spec_helper'
 RSpec.describe Logger do
   file_name = __FILE__
 
-  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
+  let(:patient_jane) { create(:patient_info, first_name: 'Jane') }
 
   context 'log' do
     context 'error' do
@@ -66,17 +66,8 @@ RSpec.describe Logger do
 
     context 'identifier' do
       context 'allowed' do
-        it 'object_id for unpersisted' do |t|
-          PatientInfo.allow_phi!(file_name, t.full_description)
-          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
-          expect(PhiAttrs::Logger.logger).to receive(:info)
-          patient_jane.first_name
-        end
-
         it 'id for persisted' do |t|
-          PatientInfo.allow_phi!(file_name, t.full_description)
-          patient_jane.save
-          expect(patient_jane.persisted?).to be true
+          patient_jane.allow_phi!(file_name, t.full_description)
           expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
           expect(PhiAttrs::Logger.logger).to receive(:info)
           patient_jane.first_name
@@ -84,16 +75,7 @@ RSpec.describe Logger do
       end
 
       context 'unauthorized' do
-        it 'object_id for unpersisted' do
-          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Object: #{patient_jane.object_id}").and_call_original
-          expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::Exceptions::PhiAccessException::TAG).and_call_original
-          expect(PhiAttrs::Logger.logger).to receive(:error)
-          expect { patient_jane.first_name }.to raise_error(access_error)
-        end
-
         it 'id for persisted' do
-          patient_jane.save
-          # expect(patient_jane.persisted?).to be true
           expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::PHI_ACCESS_LOG_TAG, PatientInfo.name, "Key: #{patient_jane.id}").and_call_original
           expect(PhiAttrs::Logger.logger).to receive(:tagged).with(PhiAttrs::Exceptions::PhiAccessException::TAG).and_call_original
           expect(PhiAttrs::Logger.logger).to receive(:error)

@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe 'exceptions' do
-  let(:patient_john) { build(:patient_info, first_name: 'John') }
+  let(:patient_john) { create(:patient_info, first_name: 'John') }
 
   context 'unauthorized' do
     it 'raises an error on default attribute' do

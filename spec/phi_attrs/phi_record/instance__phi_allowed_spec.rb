@@ -5,10 +5,34 @@ require 'spec_helper'
 RSpec.describe 'instance phi_allowed?' do
   file_name = __FILE__
 
-  let(:patient_john) { build(:patient_info, first_name: 'John') }
-  let(:patient_jane) { build(:patient_info, first_name: 'Jane') }
-  let(:patient_detail) { build(:patient_detail) }
-  let(:patient_with_detail) { build(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
+  let(:patient_john) { create(:patient_info, first_name: 'John') }
+  let(:patient_jane) { create(:patient_info, first_name: 'Jane') }
+  let(:patient_detail) { create(:patient_detail) }
+  let(:patient_with_detail) { create(:patient_info, first_name: 'Jack', patient_detail: patient_detail) }
+
+  context 'new records' do
+    let(:new_patient) { build(:patient_info, first_name: 'New') }
+
+    it 'allows phi access on new records' do
+      expect(new_patient.new_record?).to be true
+      expect(new_patient.phi_allowed?).to be true
+    end
+
+    it 'returns a default allowed_by for new records' do
+      expect(new_patient.phi_allowed_by).to eq('__new_record__')
+    end
+
+    it 'returns a default access_reason for new records' do
+      expect(new_patient.phi_access_reason).to eq('new record')
+    end
+
+    it 'revokes automatic access after persisting' do
+      new_patient.allow_phi('test', 'saving') do
+        new_patient.save!
+      end
+      expect(new_patient.phi_allowed?).to be false
+    end
+  end
 
   context 'with instance allow_phi' do
     context 'authorized' do

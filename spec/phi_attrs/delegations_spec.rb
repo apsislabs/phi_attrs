@@ -5,7 +5,7 @@ require 'spec_helper'
 RSpec.describe 'delegations' do
   file_name = __FILE__
 
-  let(:address) { build(:address) }
+  let(:address) { create(:address) }
   let(:kwargs) { { avoid_phi: 'avoid' } }
 
   context 'authorized' do

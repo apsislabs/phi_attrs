@@ -2,6 +2,8 @@
 
 # Namespace for classes and modules that handle PHI Attribute Access Logging
 module PhiAttrs
+  PhiStackEntry = Struct.new(:phi_access_allowed, :user_id, :reason, :logged, :uuid, keyword_init: true)
+
   # Module for extending ActiveRecord models to handle PHI access logging
   # and restrict access to attributes.
   #
@@ -77,13 +79,15 @@ module PhiAttrs
         reason ||= i18n_reason
         raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
+        user_id = user_id.to_s.gsub(/[\r\n]/, " ")
+        reason = reason.to_s.gsub(/[\r\n]/, " ")
         uuid = SecureRandom.uuid
-        __phi_stack.push({
+        __phi_stack.push(PhiStackEntry.new(
                             phi_access_allowed: true,
                             user_id: user_id,
                             reason: reason,
                             uuid: uuid
-                         })
+                         ))
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
@@ -195,13 +199,12 @@ module PhiAttrs
       def disallow_phi
         raise ArgumentError, 'block required. use disallow_phi! without block' unless block_given?
 
-        __phi_stack.push({
-                           phi_access_allowed: false
-                         })
-
-        yield if block_given?
-
-        __phi_stack.pop
+        __phi_stack.push(PhiStackEntry.new(phi_access_allowed: false))
+        begin
+          yield
+        ensure
+          __phi_stack.pop
+        end
       end
 
       # Revoke all PHI access for this class, if enabled by PhiRecord#allow_phi!
@@ -232,7 +235,7 @@ module PhiAttrs
 
         removed_access = __phi_stack.pop
         uuid = __uuid_string(removed_access)
-        message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No class level access was granted.'
+        message = removed_access.present? ? "PHI access disabled for #{removed_access.user_id}" : 'PHI access disabled. No class level access was granted.'
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info(message)
@@ -247,7 +250,7 @@ module PhiAttrs
       # @return [Boolean] whether PHI access is allowed for this instance
       #
       def phi_allowed?
-        __phi_stack.present? && __phi_stack[-1][:phi_access_allowed]
+        __phi_stack.present? && __phi_stack[-1].phi_access_allowed
       end
 
       def __instances_with_extended_phi
@@ -266,12 +269,12 @@ module PhiAttrs
 
       def __user_id_string(access_list)
         access_list ||= []
-        access_list.map { |c| "'#{c[:user_id]}'" }.join(',')
+        access_list.map { |c| "'#{c.user_id}'" }.join(',')
       end
 
       def __uuid_string(access_list)
         access_list ||= []
-        Array.wrap(access_list).map { |c| c[:uuid] }.join(',').presence || 'none'
+        Array.wrap(access_list).map(&:uuid).join(',').presence || 'none'
       end
 
       def current_user
@@ -344,13 +347,15 @@ module PhiAttrs
       reason ||= self.class.i18n_reason
       raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
 
+      user_id = user_id.to_s.gsub(/[\r\n]/, " ")
+      reason = reason.to_s.gsub(/[\r\n]/, " ")
       uuid = SecureRandom.uuid
-      @__phi_access_stack.push({
+      @__phi_access_stack.push(PhiStackEntry.new(
                                  phi_access_allowed: true,
                                  user_id: user_id,
                                  reason: reason,
                                  uuid: uuid,
-                               })
+                               ))
 
       PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
@@ -448,11 +453,12 @@ module PhiAttrs
 
       add_disallow_flag!
       add_disallow_flag_to_extended_phi!
-
-      yield if block_given?
-
-      remove_disallow_flag_from_extended_phi!
-      remove_disallow_flag!
+      begin
+        yield
+      ensure
+        remove_disallow_flag_from_extended_phi!
+        remove_disallow_flag!
+      end
     end
 
     # Revoke last PHI access for a single instance of this class.
@@ -465,12 +471,11 @@ module PhiAttrs
       raise ArgumentError, 'block not allowed' if block_given?
 
       removed_access = @__phi_access_stack.pop
-      uuid = removed_access.present? ? removed_access[:uuid] : nil
+      uuid = removed_access&.uuid
 
       PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
-
         revoke_extended_phi! unless preserve_extensions
-        message = removed_access.present? ? "PHI access disabled for #{removed_access[:user_id]}" : 'PHI access disabled. No instance level access was granted.'
+        message = removed_access.present? ? "PHI access disabled for #{removed_access.user_id}" : 'PHI access disabled. No instance level access was granted.'
         PhiAttrs::Logger.info(message)
       end
     end
@@ -483,7 +488,7 @@ module PhiAttrs
     def phi_allowed_by
       return '__new_record__' if new_record?
 
-      phi_context[:user_id]
+      phi_context&.user_id
     end
 
     # The access reason for allowing access to this instance.
@@ -494,7 +499,7 @@ module PhiAttrs
     def phi_access_reason
       return 'new record' if new_record?
 
-      phi_context[:reason]
+      phi_context&.reason
     end
 
     # Whether PHI access is allowed for a single instance of this class
@@ -506,7 +511,7 @@ module PhiAttrs
     # @return [Boolean] whether PHI access is allowed for this instance
     #
     def phi_allowed?
-      new_record? || (!phi_context.nil? && phi_context[:phi_access_allowed])
+      new_record? || (!phi_context.nil? && phi_context.phi_access_allowed)
     end
 
     # Require phi access. Raises an error pre-emptively if it has not been granted.
@@ -518,7 +523,7 @@ module PhiAttrs
     #   end
     #
     def require_phi!
-      raise PhiAccessException, 'PHI Access required, please call allow_phi or allow_phi! first' unless phi_allowed?
+      raise PhiAttrs::Exceptions::PhiAccessException, 'PHI Access required, please call allow_phi or allow_phi! first' unless phi_allowed?
     end
 
     def reload
@@ -531,9 +536,7 @@ module PhiAttrs
     # Adds a disallow phi flag to instance internal stack.
     # @private since subject to change
     def add_disallow_flag!
-      @__phi_access_stack.push({
-                                 phi_access_allowed: false
-                               })
+      @__phi_access_stack.push(PhiStackEntry.new(phi_access_allowed: false))
     end
 
     # removes the last item in instance internal stack.
@@ -572,8 +575,13 @@ module PhiAttrs
     # @return [Array<String>] log key for an instance of this class
     #
     def phi_log_keys
-      @__phi_log_id = persisted? ? "Key: #{public_send(self.class.primary_key)}" : "Object: #{object_id}"
-      @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, @__phi_log_id]
+      current_id = persisted? ? public_send(self.class.primary_key) : object_id
+      if @__phi_log_cached_id != current_id
+        @__phi_log_cached_id = current_id
+        prefix = persisted? ? "Key: #{current_id}" : "Object: #{current_id}"
+        @__phi_log_keys = [PHI_ACCESS_LOG_TAG, self.class.name, prefix].freeze
+      end
+      @__phi_log_keys
     end
 
     def phi_context
@@ -595,19 +603,19 @@ module PhiAttrs
     # @return String of all the user_id's passed in to allow_phi!
     #
     def all_phi_allowed_by
-      self.class.__user_id_string(all_phi_context)
-    end
-
-    def all_phi_context
-      (@__phi_access_stack || []) + (self.class.__phi_stack || [])
+      ids = (@__phi_access_stack || []).filter_map { |c| "'#{c.user_id}'" }
+      ids.concat(self.class.__phi_stack.filter_map { |c| "'#{c.user_id}'" })
+      ids.join(',')
     end
 
     def all_phi_context_logged?
-      all_phi_context.all? { |v| v[:logged] }
+      (@__phi_access_stack.nil? || @__phi_access_stack.all? { |v| v.logged }) &&
+        self.class.__phi_stack.all? { |v| v.logged }
     end
 
     def set_all_phi_context_logged
-      all_phi_context.each { |c| c[:logged] = true }
+      @__phi_access_stack&.each { |c| c.logged = true }
+      self.class.__phi_stack.each { |c| c.logged = true }
     end
 
     # Core logic for wrapping methods in PHI access logging and access restriction.

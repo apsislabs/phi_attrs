@@ -2,5 +2,5 @@
 source bin/helpers/docker
 runOnDocker ruby3
 
-echo "== Starting rubocop =="
-bundle exec rubocop --format worst --format simple --format offenses --autocorrect
+echo "== Starting standardrb auto-fix =="
+bundle exec standardrb --fix

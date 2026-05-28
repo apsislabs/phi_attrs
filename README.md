@@ -443,15 +443,20 @@ It is recommended to use the provided `docker-compose` environment for developme
 
 ### Tests
 
-Tests are written using [RSpec](https://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple rails versions.
+Tests are written using [RSpec](https://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple Rails versions. Supported runtimes are Ruby 3.2+ and Rails 7.0 through 8.0.
 
     $ bin/run_tests
     or for individual tests:
     $ bin/ssh_to_container
     $ bundle exec appraisal rspec spec/path/to/spec.rb
 
-To run just a particular rails version:
-    $  bundle exec appraisal rails_7.0 rspec
+To run just a particular Rails version:
+
+    $ bundle exec appraisal rails_7.0 rspec
+
+Linting uses [standardrb](https://github.com/standardrb/standard):
+
+    $ bundle exec standardrb
 
 ### Console
 
@@ -462,13 +467,38 @@ An interactive prompt that will allow you to experiment with the gem.
 
 ### Local Install
 
-Run `bin/setup` to install dependencies. Then, run `bundle exec appraisal rspec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Run `bin/setup` to install dependencies. Then, run `bundle exec rake` to run linting and tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`.
 
-### Versioning
+### Releases
 
-To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Releases are driven by git tags. The version lives in `lib/phi_attrs/version.rb`, and the gemspec reads `PhiAttrs::VERSION`.
+
+```bash
+bundle install
+bin/release patch # or: minor, major
+```
+
+To publish an RC for a specific version:
+
+```bash
+bin/release rc 1.2.0
+```
+
+This sets the version to `1.2.0-rc` and tags it as `v1.2.0-rc`.
+
+Prereleases can also use `bump`'s native `pre` increment:
+
+```bash
+bin/release pre
+```
+
+`pre` cycles prerelease labels in order: `alpha`, `beta`, `rc`, then the final version. For example, `1.2.0-rc` becomes `1.2.0`, tagged as `v1.2.0`.
+
+`bin/release` uses `bump`, commits the version file, creates a `v<version>` tag, pushes the branch, and pushes the tag.
+
+GitHub Actions publishes only when a `v*` tag is pushed. The publish workflow builds the gem, pushes it to RubyGems with `RUBYGEMS_API_KEY`, and creates a GitHub release with the built gem attached. Tags containing a prerelease suffix, such as `v1.2.0-rc`, are marked as prereleases on GitHub.
 
 
 ## Contributing
@@ -479,10 +509,9 @@ Any PRs should be accompanied with documentation in `README.md`.
 
 ### Releasing
 
-* Squash and merge your PR, including a bump to `lib/phi_attrs/version.rb`
-* Draft a new release, creating a new tag with the new version number from `version.rb`, i.e. `v0.3.2`
-* Auto-generate release notes, add any context if necessary
-* Publish release; release will be automatically built and published to rubygems
+* Squash and merge your PR.
+* Run `bin/release patch`, `bin/release minor`, `bin/release major`, or `bin/release rc X.Y.Z`.
+* The pushed `v*` tag will be automatically built and published to RubyGems.
 
 ## License
 

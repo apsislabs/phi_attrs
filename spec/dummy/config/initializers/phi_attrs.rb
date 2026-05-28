@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 PhiAttrs.configure do |conf|
-  conf.log_path = Rails.root.join('log/phi_access.log')
+  conf.log_path = Rails.root.join("log/phi_access.log")
 
   # Log Rotation - disabled by default
   # See: https://apidock.com/ruby/Logger/new/class

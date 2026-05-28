@@ -24,20 +24,20 @@ ActiveRecord::Schema[7.2].define(version: 2017_02_14_100255) do
   end
 
   create_table "missing_attribute_models", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "missing_extend_models", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "patient_details", force: :cascade do |t|
     t.integer "patient_info_id"
     t.string "detail"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["patient_info_id"], name: "index_patient_details_on_patient_info_id"
   end
 
@@ -45,7 +45,7 @@ ActiveRecord::Schema[7.2].define(version: 2017_02_14_100255) do
     t.string "first_name"
     t.string "last_name"
     t.string "public_id"
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 end

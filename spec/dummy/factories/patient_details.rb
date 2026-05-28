@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory :patient_detail do
-    detail { 'Generic Spell' }
+    detail { "Generic Spell" }
 
     trait :all_random do
       detail { Faker::Movies::HarryPotter.spell }

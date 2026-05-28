@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module PhiAttrs
-  PHI_ACCESS_LOG_TAG = 'PHI Access Log'
+  PHI_ACCESS_LOG_TAG = "PHI Access Log"
 
   class Logger
     class << self

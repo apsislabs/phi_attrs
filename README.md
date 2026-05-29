@@ -471,34 +471,18 @@ Run `bin/setup` to install dependencies. Then, run `bundle exec rake` to run lin
 
 To install this gem onto your local machine, run `bundle exec rake install`.
 
-### Releases
+### Releasing
 
-Releases are driven by git tags. The version lives in `lib/phi_attrs/version.rb`, and the gemspec reads `PhiAttrs::VERSION`.
+Create a release from `main`:
 
-```bash
-bundle install
-bin/release patch # or: minor, major
+```sh
+bin/release {major|minor|patch|pre}
+git push --follow-tags
 ```
 
-To publish an RC for a specific version:
+The release script validates the repository, bumps the version, creates a git tag.
 
-```bash
-bin/release rc 1.2.0
-```
-
-This sets the version to `1.2.0-rc` and tags it as `v1.2.0-rc`.
-
-Prereleases can also use `bump`'s native `pre` increment:
-
-```bash
-bin/release pre
-```
-
-`pre` cycles prerelease labels in order: `alpha`, `beta`, `rc`, then the final version. For example, `1.2.0-rc` becomes `1.2.0`, tagged as `v1.2.0`.
-
-`bin/release` uses `bump`, commits the version file, creates a `v<version>` tag, pushes the branch, and pushes the tag.
-
-GitHub Actions publishes only when a `v*` tag is pushed. The publish workflow builds the gem, pushes it to RubyGems with `RUBYGEMS_API_KEY`, and creates a GitHub release with the built gem attached. Tags containing a prerelease suffix, such as `v1.2.0-rc`, are marked as prereleases on GitHub.
+Publishing to RubyGems and creating a GitHub Release are handled automatically by GitHub Actions.
 
 
 ## Contributing

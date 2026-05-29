@@ -30,15 +30,10 @@ if [ "$CURRENT_BRANCH" != "main" ]; then
   exit 1
 fi
 
-run bundle exec rake
-
 run bundle exec bump "$BUMP_TYPE" --tag
 
 VERSION="$(bundle exec bump current | awk '{print $NF}')"
 TAG="v${VERSION}"
-
-run git push origin main
-run git push origin "$TAG"
 
 echo
 echo "Released $TAG"

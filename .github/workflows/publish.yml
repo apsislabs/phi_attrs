@@ -1,4 +1,4 @@
-name: Publish Gem
+name: Publish ${{ github.ref_name }}
 
 on:
   push:
@@ -10,65 +10,50 @@ permissions:
 
 jobs:
   publish:
+    name: Release ${{ github.ref_name }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Ruby
+      - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
           bundler-cache: true
 
       - name: Build gem
+        run: bundle exec rake build
+
+      - name: Configure RubyGems credentials
         run: |
-          set -euo pipefail
-          gemspec="$(ls *.gemspec | head -n 1)"
-          gem_name="${gemspec%.gemspec}"
-          version="${GITHUB_REF_NAME#v}"
-          gem_file="pkg/${gem_name}-${version}.gem"
-
-          echo "Building ${gem_name} ${version}..."
-          mkdir -p pkg
-          bundle exec gem build "$gemspec" --output "$gem_file"
-          test -f "$gem_file"
-
-      - name: Publish to RubyGems
-        env:
-          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
-        run: |
-          set -euo pipefail
-
-          if [[ -z "${RUBYGEMS_API_KEY:-}" ]]; then
-            echo "::error::Missing RUBYGEMS_API_KEY secret."
-            exit 1
-          fi
-
-          gem_file="$(ls pkg/*.gem | head -n 1)"
-          echo "Publishing ${gem_file}..."
-
           mkdir -p ~/.gem
-          printf -- "---\n:rubygems_api_key: %s\n" "$RUBYGEMS_API_KEY" > ~/.gem/credentials
+          cat > ~/.gem/credentials <<EOF
+          ---
+          :rubygems_api_key: ${{ secrets.RUBYGEMS_AUTH_TOKEN }}
+          EOF
           chmod 0600 ~/.gem/credentials
 
-          gem push "$gem_file"
+      - name: Publish gem
+        run: gem push pkg/*.gem
 
-      - name: Create GitHub release
+      - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
 
-          prerelease_flag=()
-          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
-            prerelease_flag=(--prerelease)
+          if [[ "$TAG" =~ \.(pre|rc|beta)(\.|$) ]]; then
+            gh release create \
+              "$TAG" \
+              pkg/*.gem \
+              --title "$TAG" \
+              --generate-notes \
+              --prerelease
+          else
+            gh release create \
+              "$TAG" \
+              pkg/*.gem \
+              --title "$TAG" \
+              --generate-notes
           fi
-
-          echo "Creating GitHub release ${GITHUB_REF_NAME}..."
-          gh release create "$GITHUB_REF_NAME" pkg/*.gem \
-            --verify-tag \
-            --title "$GITHUB_REF_NAME" \
-            --notes "Published to RubyGems." \
-            "${prerelease_flag[@]}"

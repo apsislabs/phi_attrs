@@ -703,12 +703,15 @@ module PhiAttrs
         self.class.send(:define_method, wrapped_method) do |*args, **kwargs, &block|
           relation = send(unwrapped_method, *args, **kwargs, &block)
 
-          if phi_allowed? && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+          access_context = phi_context
+          if access_context&.phi_access_allowed && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
             relations = relation.is_a?(Enumerable) ? relation : [relation]
             relations.each do |r|
-              r.allow_phi!(phi_allowed_by, phi_access_reason) unless @__phi_relations_extended.include?(r)
+              next if @__phi_relations_extended.include?(r) && r.phi_allowed?
+
+              r.allow_phi!(access_context.user_id, access_context.reason)
+              @__phi_relations_extended.add(r)
             end
-            @__phi_relations_extended.merge(relations)
             self.class.__instances_with_extended_phi.add(self)
           end
 

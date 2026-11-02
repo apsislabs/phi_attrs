@@ -526,7 +526,7 @@ module PhiAttrs
       raise PhiAttrs::Exceptions::PhiAccessException, 'PHI Access required, please call allow_phi or allow_phi! first' unless phi_allowed?
     end
 
-    def reload
+    def reload(options = nil)
       @__phi_relations_extended.clear
       super
     end

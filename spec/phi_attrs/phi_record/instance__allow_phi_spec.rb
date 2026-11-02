@@ -72,6 +72,10 @@ RSpec.describe 'instance allow_phi' do
         expect { patient_jane.allow_phi! 'ok', 'ok' }.not_to raise_error
       end
 
+      it 'accepts lock options when reloading' do
+        expect { patient_jane.reload(lock: true) }.not_to raise_error
+      end
+
       it 'allow_phi persists after a reload' do |t|
         dumbledore = create(:patient_info, first_name: 'Albus', patient_detail: create(:patient_detail))
         dumbledore.allow_phi(file_name, t.full_description) do

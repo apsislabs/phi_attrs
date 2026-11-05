@@ -736,7 +736,7 @@ module PhiAttrs
           relation = send(unwrapped_method, *args, **kwargs, &block)
 
           access_context = phi_context
-          if access_context&.phi_access_allowed && relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+          if access_context&.phi_access_allowed && relation.present? && relation_klass(relation).include?(PhiRecord)
             relations = relation.is_a?(Enumerable) ? relation : [relation]
             relations.each do |r|
               next if @__phi_relations_extended.include?(r) && r.phi_allowed?
@@ -762,7 +762,7 @@ module PhiAttrs
     def revoke_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
-        relation.disallow_last_phi! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+        relation.disallow_last_phi! if relation.present? && relation_klass(relation).include?(PhiRecord)
       end
       @__phi_relations_extended.subtract(relations)
     end
@@ -771,7 +771,7 @@ module PhiAttrs
     def add_disallow_flag_to_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
-        relation.add_disallow_flag! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+        relation.add_disallow_flag! if relation.present? && relation_klass(relation).include?(PhiRecord)
       end
     end
 
@@ -779,7 +779,7 @@ module PhiAttrs
     def remove_disallow_flag_from_extended_phi!(relations = nil)
       relations ||= @__phi_relations_extended
       relations.each do |relation|
-        relation.remove_disallow_flag! if relation.present? && relation_klass(relation).included_modules.include?(PhiRecord)
+        relation.remove_disallow_flag! if relation.present? && relation_klass(relation).include?(PhiRecord)
       end
     end
 

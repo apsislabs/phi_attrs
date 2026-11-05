@@ -2,7 +2,7 @@
 
 # Namespace for classes and modules that handle PHI Attribute Access Logging
 module PhiAttrs
-  PhiStackEntry = Struct.new(:phi_access_allowed, :user_id, :reason, :logged, :uuid, keyword_init: true)
+  PhiStackEntry = Struct.new(:phi_access_allowed, :user_id, :reason, :logged, :uuid)
 
   # Module for extending ActiveRecord models to handle PHI access logging
   # and restrict access to attributes.

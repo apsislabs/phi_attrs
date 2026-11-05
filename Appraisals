@@ -27,3 +27,10 @@ appraise "rails_8.0" do
   gem "rspec-rails", "~> 8.0"
   gem "sqlite3", "~> 2.0"
 end
+
+appraise "rails_8.1" do
+  gem "rails", "~> 8.1.0"
+  gem "rspec", "~> 3.13"
+  gem "rspec-rails", "~> 8.0"
+  gem "sqlite3", "~> 2.0"
+end

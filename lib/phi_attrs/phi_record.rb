@@ -2,7 +2,7 @@
 
 # Namespace for classes and modules that handle PHI Attribute Access Logging
 module PhiAttrs
-  PhiStackEntry = Struct.new(:phi_access_allowed, :user_id, :reason, :logged, :uuid, keyword_init: true)
+  PhiStackEntry = Struct.new(:phi_access_allowed, :user_id, :reason, :logged, :uuid)
 
   # Module for extending ActiveRecord models to handle PHI access logging
   # and restrict access to attributes.
@@ -11,6 +11,14 @@ module PhiAttrs
   # @since 0.1.0
   module PhiRecord
     extend ActiveSupport::Concern
+
+    # Serializes method wrapping. Wrapping runs from `after_initialize`, so the
+    # first instances of a model built concurrently on different threads would
+    # otherwise race through the check-then-alias steps below. A thread that
+    # loses that race aliases the unwrapped name to the wrapper, and every later
+    # call recurses until SystemStackError. A Monitor (not a Mutex) is used so
+    # the same thread can take the lock again if building one record builds another.
+    PHI_WRAP_LOCK = Monitor.new
 
     included do
       class_attribute :__phi_exclude_methods
@@ -657,6 +665,18 @@ module PhiAttrs
       end
       return if self.class.__phi_methods_wrapped.include? method_name
 
+      PHI_WRAP_LOCK.synchronize { phi_wrap_method!(method_name) }
+    end
+
+    # Does the wrapping for `phi_wrap_method`. Must be called with
+    # PHI_WRAP_LOCK held.
+    #
+    # @private
+    #
+    def phi_wrap_method!(method_name)
+      # Another thread may have wrapped this method while we waited for the lock.
+      return if self.class.__phi_methods_wrapped.include? method_name
+
       wrapped_method = :"__#{method_name}_phi_wrapped"
       unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
@@ -694,6 +714,18 @@ module PhiAttrs
     #
     def phi_wrap_extension(method_name)
       raise NameError, "Undefined relationship in `extend_phi_access`: #{method_name}" unless respond_to?(method_name)
+      return if self.class.__phi_methods_to_extend.include? method_name
+
+      PHI_WRAP_LOCK.synchronize { phi_wrap_extension!(method_name) }
+    end
+
+    # Does the wrapping for `phi_wrap_extension`. Must be called with
+    # PHI_WRAP_LOCK held.
+    #
+    # @private
+    #
+    def phi_wrap_extension!(method_name)
+      # Another thread may have wrapped this method while we waited for the lock.
       return if self.class.__phi_methods_to_extend.include? method_name
 
       wrapped_method = wrapped_extended_name(method_name)

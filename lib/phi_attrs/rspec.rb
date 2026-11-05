@@ -27,7 +27,7 @@ RSpec::Matchers.define :allow_phi_access do
     @reason = reason
   end
 
-  # :nocov:
+  # simplecov:disable
   failure_message do |result|
     msgs = []
 
@@ -41,5 +41,5 @@ RSpec::Matchers.define :allow_phi_access do
   failure_message_when_negated do |result|
     "PHI access was allowed by '#{result.phi_allowed_by}', because '#{result.phi_access_reason}'"
   end
-  # :nocov:
+  # simplecov:enable
 end

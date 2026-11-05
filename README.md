@@ -443,7 +443,7 @@ It is recommended to use the provided `docker-compose` environment for developme
 
 ### Tests
 
-Tests are written using [RSpec](https://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple Rails versions. Supported runtimes are Ruby 3.2+ and Rails 7.0 through 8.0.
+Tests are written using [RSpec](https://rspec.info/) and are setup to use [Appraisal](https://github.com/thoughtbot/appraisal) to run tests over multiple Rails versions. Supported runtimes are Ruby 3.2+ and Rails 7.0 through 8.1.
 
     $ bin/run_tests
     or for individual tests:

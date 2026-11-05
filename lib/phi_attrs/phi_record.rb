@@ -12,6 +12,14 @@ module PhiAttrs
   module PhiRecord
     extend ActiveSupport::Concern
 
+    # Serializes method wrapping. Wrapping runs from `after_initialize`, so the
+    # first instances of a model built concurrently on different threads would
+    # otherwise race through the check-then-alias steps below. A thread that
+    # loses that race aliases the unwrapped name to the wrapper, and every later
+    # call recurses until SystemStackError. A Monitor (not a Mutex) is used so
+    # the same thread can take the lock again if building one record builds another.
+    PHI_WRAP_LOCK = Monitor.new
+
     included do
       class_attribute :__phi_exclude_methods
       class_attribute :__phi_include_methods
@@ -73,21 +81,21 @@ module PhiAttrs
       #   Foo.allow_phi!('user@example.com', 'viewing patient record')
       #
       def allow_phi!(user_id = nil, reason = nil)
-        raise ArgumentError, 'block not allowed. use allow_phi with block' if block_given?
+        raise ArgumentError, "block not allowed. use allow_phi with block" if block_given?
 
         user_id ||= current_user
         reason ||= i18n_reason
-        raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
+        raise ArgumentError, "user_id and reason cannot be blank" if user_id.blank? || reason.blank?
 
         user_id = user_id.to_s.gsub(/[\r\n]/, " ")
         reason = reason.to_s.gsub(/[\r\n]/, " ")
         uuid = SecureRandom.uuid
         __phi_stack.push(PhiStackEntry.new(
-                            phi_access_allowed: true,
-                            user_id: user_id,
-                            reason: reason,
-                            uuid: uuid
-                         ))
+          phi_access_allowed: true,
+          user_id: user_id,
+          reason: reason,
+          uuid: uuid
+        ))
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
@@ -137,12 +145,12 @@ module PhiAttrs
       #   end
       #
       def get_phi(user_id = nil, reason = nil, allow_only: nil)
-        raise ArgumentError, 'block required' unless block_given?
+        raise ArgumentError, "block required" unless block_given?
 
         if allow_only.present?
-          raise ArgumentError, 'allow_only must be iterable with each' unless allow_only.respond_to?(:each)
+          raise ArgumentError, "allow_only must be iterable with each" unless allow_only.respond_to?(:each)
           raise ArgumentError, "allow_only must all be `#{name}` objects" unless allow_only.all? { |t| t.is_a?(self) }
-          raise ArgumentError, 'allow_only must all have `allow_phi!` methods' unless allow_only.all? { |t| t.respond_to?(:allow_phi!) }
+          raise ArgumentError, "allow_only must all have `allow_phi!` methods" unless allow_only.all? { |t| t.respond_to?(:allow_phi!) }
         end
 
         # Save this so we don't revoke access previously extended outside the block
@@ -197,7 +205,7 @@ module PhiAttrs
       #   end
       #   # PHI Access Allowed Again
       def disallow_phi
-        raise ArgumentError, 'block required. use disallow_phi! without block' unless block_given?
+        raise ArgumentError, "block required. use disallow_phi! without block" unless block_given?
 
         __phi_stack.push(PhiStackEntry.new(phi_access_allowed: false))
         begin
@@ -213,10 +221,10 @@ module PhiAttrs
       #   Foo.disallow_phi!
       #
       def disallow_phi!
-        raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
+        raise ArgumentError, "block not allowed. use disallow_phi with block" if block_given?
 
         uuid = __uuid_string(__phi_stack)
-        message = __phi_stack.present? ? "PHI access disabled for #{__user_id_string(__phi_stack)}" : 'PHI access disabled. No class level access was granted.'
+        message = __phi_stack.present? ? "PHI access disabled for #{__user_id_string(__phi_stack)}" : "PHI access disabled. No class level access was granted."
 
         __reset_phi_stack
 
@@ -231,11 +239,11 @@ module PhiAttrs
       #   Foo.disallow_last_phi!
       #
       def disallow_last_phi!
-        raise ArgumentError, 'block not allowed' if block_given?
+        raise ArgumentError, "block not allowed" if block_given?
 
         removed_access = __phi_stack.pop
         uuid = __uuid_string(removed_access)
-        message = removed_access.present? ? "PHI access disabled for #{removed_access.user_id}" : 'PHI access disabled. No class level access was granted.'
+        message = removed_access.present? ? "PHI access disabled for #{removed_access.user_id}" : "PHI access disabled. No class level access was granted."
 
         PhiAttrs::Logger.tagged(PHI_ACCESS_LOG_TAG, name, uuid) do
           PhiAttrs::Logger.info(message)
@@ -269,12 +277,12 @@ module PhiAttrs
 
       def __user_id_string(access_list)
         access_list ||= []
-        access_list.map { |c| "'#{c.user_id}'" }.join(',')
+        access_list.map { |c| "'#{c.user_id}'" }.join(",")
       end
 
       def __uuid_string(access_list)
         access_list ||= []
-        Array.wrap(access_list).map(&:uuid).join(',').presence || 'none'
+        Array.wrap(access_list).map(&:uuid).join(",").presence || "none"
       end
 
       def current_user
@@ -289,7 +297,7 @@ module PhiAttrs
 
         i18n_path = [PhiAttrs.translation_prefix] + __path_to_controller_and_action(controller, action)
         i18n_path.push(*__path_to_class)
-        i18n_key = i18n_path.join('.')
+        i18n_key = i18n_path.join(".")
 
         return I18n.t(i18n_key) if I18n.exists?(i18n_key)
 
@@ -299,16 +307,16 @@ module PhiAttrs
       end
 
       def __path_to_controller_and_action(controller, action)
-        module_paths = controller.underscore.split('/')
-        class_name_parts = module_paths.pop.split('_')
-        class_name_parts.pop if class_name_parts[-1] == 'controller'
-        module_paths.push(class_name_parts.join('_'), action)
+        module_paths = controller.underscore.split("/")
+        class_name_parts = module_paths.pop.split("_")
+        class_name_parts.pop if class_name_parts[-1] == "controller"
+        module_paths.push(class_name_parts.join("_"), action)
       end
 
       def __path_to_class
-        module_paths = name.underscore.split('/')
-        class_name_parts = module_paths.pop.split('_')
-        module_paths.push(class_name_parts.join('_'))
+        module_paths = name.underscore.split("/")
+        class_name_parts = module_paths.pop.split("_")
+        module_paths.push(class_name_parts.join("_"))
       end
     end
 
@@ -341,21 +349,21 @@ module PhiAttrs
     #   foo.allow_phi!('user@example.com', 'viewing patient record')
     #
     def allow_phi!(user_id = nil, reason = nil)
-      raise ArgumentError, 'block not allowed. use allow_phi with block' if block_given?
+      raise ArgumentError, "block not allowed. use allow_phi with block" if block_given?
 
       user_id ||= self.class.current_user
       reason ||= self.class.i18n_reason
-      raise ArgumentError, 'user_id and reason cannot be blank' if user_id.blank? || reason.blank?
+      raise ArgumentError, "user_id and reason cannot be blank" if user_id.blank? || reason.blank?
 
       user_id = user_id.to_s.gsub(/[\r\n]/, " ")
       reason = reason.to_s.gsub(/[\r\n]/, " ")
       uuid = SecureRandom.uuid
       @__phi_access_stack.push(PhiStackEntry.new(
-                                 phi_access_allowed: true,
-                                 user_id: user_id,
-                                 reason: reason,
-                                 uuid: uuid,
-                               ))
+        phi_access_allowed: true,
+        user_id: user_id,
+        reason: reason,
+        uuid: uuid
+      ))
 
       PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
         PhiAttrs::Logger.info("PHI Access Enabled for '#{user_id}': #{reason}")
@@ -398,7 +406,7 @@ module PhiAttrs
     #   end
     #
     def get_phi(user_id = nil, reason = nil)
-      raise ArgumentError, 'block required' unless block_given?
+      raise ArgumentError, "block required" unless block_given?
 
       extended_instances = @__phi_relations_extended.clone
       begin
@@ -419,7 +427,7 @@ module PhiAttrs
     #   foo.disallow_phi!
     #
     def disallow_phi!
-      raise ArgumentError, 'block not allowed. use disallow_phi with block' if block_given?
+      raise ArgumentError, "block not allowed. use disallow_phi with block" if block_given?
 
       removed_access_for_uuid = self.class.__uuid_string(@__phi_access_stack)
 
@@ -429,7 +437,7 @@ module PhiAttrs
         revoke_extended_phi!
         @__phi_access_stack = []
 
-        message = removed_access_for.present? ? "PHI access disabled for #{removed_access_for}" : 'PHI access disabled. No instance level access was granted.'
+        message = removed_access_for.present? ? "PHI access disabled for #{removed_access_for}" : "PHI access disabled. No instance level access was granted."
         PhiAttrs::Logger.info(message)
       end
     end
@@ -449,7 +457,7 @@ module PhiAttrs
     #   # PHI Access Disallowed Here
     #
     def disallow_phi
-      raise ArgumentError, 'block required. use disallow_phi! without block' unless block_given?
+      raise ArgumentError, "block required. use disallow_phi! without block" unless block_given?
 
       add_disallow_flag!
       add_disallow_flag_to_extended_phi!
@@ -468,14 +476,14 @@ module PhiAttrs
     #   foo.disallow_last_phi!
     #
     def disallow_last_phi!(preserve_extensions: false)
-      raise ArgumentError, 'block not allowed' if block_given?
+      raise ArgumentError, "block not allowed" if block_given?
 
       removed_access = @__phi_access_stack.pop
       uuid = removed_access&.uuid
 
       PhiAttrs::Logger.tagged(*phi_log_keys, uuid) do
         revoke_extended_phi! unless preserve_extensions
-        message = removed_access.present? ? "PHI access disabled for #{removed_access.user_id}" : 'PHI access disabled. No instance level access was granted.'
+        message = removed_access.present? ? "PHI access disabled for #{removed_access.user_id}" : "PHI access disabled. No instance level access was granted."
         PhiAttrs::Logger.info(message)
       end
     end
@@ -486,7 +494,7 @@ module PhiAttrs
     # @return [String] the user_id passed in to allow_phi!
     #
     def phi_allowed_by
-      return '__new_record__' if new_record?
+      return "__new_record__" if new_record?
 
       phi_context&.user_id
     end
@@ -497,7 +505,7 @@ module PhiAttrs
     # @return [String] the reason passed in to allow_phi!
     #
     def phi_access_reason
-      return 'new record' if new_record?
+      return "new record" if new_record?
 
       phi_context&.reason
     end
@@ -523,7 +531,7 @@ module PhiAttrs
     #   end
     #
     def require_phi!
-      raise PhiAttrs::Exceptions::PhiAccessException, 'PHI Access required, please call allow_phi or allow_phi! first' unless phi_allowed?
+      raise PhiAttrs::Exceptions::PhiAccessException, "PHI Access required, please call allow_phi or allow_phi! first" unless phi_allowed?
     end
 
     def reload(options = nil)
@@ -605,7 +613,7 @@ module PhiAttrs
     def all_phi_allowed_by
       ids = (@__phi_access_stack || []).filter_map { |c| "'#{c.user_id}'" }
       ids.concat(self.class.__phi_stack.filter_map { |c| "'#{c.user_id}'" })
-      ids.join(',')
+      ids.join(",")
     end
 
     def all_phi_context_logged?
@@ -657,6 +665,18 @@ module PhiAttrs
       end
       return if self.class.__phi_methods_wrapped.include? method_name
 
+      PHI_WRAP_LOCK.synchronize { phi_wrap_method!(method_name) }
+    end
+
+    # Does the wrapping for `phi_wrap_method`. Must be called with
+    # PHI_WRAP_LOCK held.
+    #
+    # @private
+    #
+    def phi_wrap_method!(method_name)
+      # Another thread may have wrapped this method while we waited for the lock.
+      return if self.class.__phi_methods_wrapped.include? method_name
+
       wrapped_method = :"__#{method_name}_phi_wrapped"
       unwrapped_method = :"__#{method_name}_phi_unwrapped"
 
@@ -694,6 +714,18 @@ module PhiAttrs
     #
     def phi_wrap_extension(method_name)
       raise NameError, "Undefined relationship in `extend_phi_access`: #{method_name}" unless respond_to?(method_name)
+      return if self.class.__phi_methods_to_extend.include? method_name
+
+      PHI_WRAP_LOCK.synchronize { phi_wrap_extension!(method_name) }
+    end
+
+    # Does the wrapping for `phi_wrap_extension`. Must be called with
+    # PHI_WRAP_LOCK held.
+    #
+    # @private
+    #
+    def phi_wrap_extension!(method_name)
+      # Another thread may have wrapped this method while we waited for the lock.
       return if self.class.__phi_methods_to_extend.include? method_name
 
       wrapped_method = wrapped_extended_name(method_name)

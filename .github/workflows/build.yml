@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ["3.2", "3.3", "3.4"]
-        appraisal: [rails_7.0, rails_7.1, rails_7.2, rails_8.0]
+        appraisal: [rails_7.0, rails_7.1, rails_7.2, rails_8.0, rails_8.1]
     env:
       BUNDLE_GEMFILE: gemfiles/${{ matrix.appraisal }}.gemfile
     steps:
@@ -24,7 +24,7 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - name: Lint
-        if: matrix.ruby == '3.4' && matrix.appraisal == 'rails_8.0'
+        if: matrix.ruby == '3.4' && matrix.appraisal == 'rails_8.1'
         run: bundle exec standardrb
       - name: Run tests
         run: bundle exec rake spec
